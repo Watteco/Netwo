@@ -172,9 +172,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean initialStart = true;
     public Connected connected = Connected.False;
 
-    private String APPEUI = "Not available";
-    private String APPEUI_value = "";
-
     private String DEVEUI = "Not available";
     private String DEVEUI_value = "";
     int spMarginPerfect, spMarginGood, spMarginBad, spRSSIPerfect, spRSSIBad, spSNRPerfect, spSNRBad, spSpinnerEUI;
@@ -836,9 +833,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 isResult = true;
             }else if(line.contains("TX") && line.contains("/")){
                 isTxInfo = true;
-            }else if(line.startsWith("APPEUI")){
-                APPEUI = line.split(":")[1];
-                APPEUI_value = APPEUI.substring(APPEUI.length()-2);
             }else if(line.startsWith("DEVEUI")){
                 DEVEUI = line.split(":")[1];
                 DEVEUI_value = DEVEUI.substring(10,11);
@@ -1543,7 +1537,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         Bundle bundle = new Bundle();
 
-        bundle.putString("APPEUI",APPEUI);
         bundle.putString("DEVEUI", DEVEUI);
 
         assert getFragmentManager() != null;
@@ -1564,12 +1557,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
         });
 
-
-        sendFragment.setAPPEUI( result -> {
-            APPEUI = result;
-            APPEUI_value = APPEUI.substring(APPEUI.length()-1);
-            send("MAPPEUI" + APPEUI_value);
-        });
 
         sendFragment.setDEVEUI( result -> {
             DEVEUI = result;

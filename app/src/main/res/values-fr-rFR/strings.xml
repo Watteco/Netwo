@@ -58,5 +58,5 @@
     <string name="support">Support en ligne</string>
     <string name="location_permission_title_two">Autorisation de localisation requise (COARSE)</string>
     <string name="location_permission_message_two">" Depuis Android 10, cette application nécessite l'autorisation de localisation CORSE pour scanner les appareils BLE."</string>
-    <string name="configEUI">Nbr adresses à afficher pour le APP/DEV EUI :</string>
+    <string name="configEUI">Nbr adresses à afficher pour le DEVEUI :</string>
 </resources>

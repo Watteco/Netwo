@@ -32,10 +32,10 @@ public class SendFragment extends DialogFragment {
 
     private enum Connected {False, Pending, True}
 
-    String APPEUI, DEVEUI;
+    String DEVEUI;
     CheckBox checkBoxADR;
     EditText editNumber;
-    Spinner spinnerSF, spinnerAPPEUI, spinnerDEVEUI;
+    Spinner spinnerSF, spinnerDEVEUI;
     OnMyDialogResult mDialogResult;
     OnMyDialogUpdate mDialogUpdateAPP;
     OnMyDialogUpdate mDialogUpdateDEV;
@@ -57,7 +57,6 @@ public class SendFragment extends DialogFragment {
         Bundle arg = getArguments();
         assert arg != null;
 
-        APPEUI = arg.getString("APPEUI");
         DEVEUI = arg.getString("DEVEUI");
 
         terminalFragment = (TerminalFragment) getFragmentManager().findFragmentByTag("terminal");
@@ -80,47 +79,32 @@ public class SendFragment extends DialogFragment {
 
         int spSpinnerEUI = sharedPref.getInt("spinnerEUI", 2);
 
-        spinnerAPPEUI = v.findViewById(R.id.sendSpinnerAPPEUI);
         spinnerDEVEUI = v.findViewById(R.id.sendSpinnerDEVEUI);
 
-        List<String> arrayListAPPEUI = new ArrayList<>();
 
-        for (int i = 0; i < spSpinnerEUI; i++) {
-            arrayListAPPEUI.add("70B3D5E75F60000" + i);
-        }
+        if (DEVEUI.equals("Not available")) {
+            spinnerDEVEUI.setEnabled(false);
+        } else {
 
-        List<String> arrayListDEVEUI = new ArrayList<>();
-        for (int i = 0; i < spSpinnerEUI; i++) {
-            arrayListDEVEUI.add("70B3D5E75E" + i + "0DEDC");
-        }
 
-        ArrayAdapter<CharSequence> adapterAPPEUI = new ArrayAdapter(getContext(),R.layout.support_simple_spinner_dropdown_item,arrayListAPPEUI);
-        adapterAPPEUI.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        ArrayAdapter<CharSequence> adapterDEVEUI = new ArrayAdapter(getContext(),R.layout.support_simple_spinner_dropdown_item,arrayListDEVEUI);
-        adapterDEVEUI.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        spinnerAPPEUI.setAdapter(adapterAPPEUI);
-        spinnerAPPEUI.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                if(mDialogUpdateAPP != null && !initSpinnerAPP){
-                    mDialogUpdateAPP.update(spinnerAPPEUI.getSelectedItem().toString());
-                    terminalFragment.setConnection(TerminalFragment.Connected.False);
-                }
-                initSpinnerAPP = false;
+            List<String> arrayListDEVEUI = new ArrayList<>();
+            for (int i = 0; i < spSpinnerEUI; i++) {
+                arrayListDEVEUI.add(DEVEUI.substring(0, 10) + i + DEVEUI.substring(11));
             }
 
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                return;
-            }
-        });
-        spinnerAPPEUI.setSelection(arrayListAPPEUI.indexOf(APPEUI));
 
+            ArrayAdapter<CharSequence> adapterDEVEUI = new ArrayAdapter(getContext(), R.layout.support_simple_spinner_dropdown_item, arrayListDEVEUI);
+            adapterDEVEUI.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        spinnerDEVEUI.setAdapter(adapterDEVEUI);
+            spinnerDEVEUI.setAdapter(adapterDEVEUI);
+
+            spinnerDEVEUI.setSelection(arrayListDEVEUI.indexOf(DEVEUI));
+
+        }
+
         spinnerDEVEUI.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                if(mDialogUpdateDEV != null && !initSpinnerDEV){
+                if (mDialogUpdateDEV != null && !initSpinnerDEV) {
                     mDialogUpdateDEV.update(spinnerDEVEUI.getSelectedItem().toString());
                     terminalFragment.setConnection(TerminalFragment.Connected.False);
                 }
@@ -131,7 +115,7 @@ public class SendFragment extends DialogFragment {
                 return;
             }
         });
-        spinnerDEVEUI.setSelection(arrayListDEVEUI.indexOf(DEVEUI));
+
 
         spinnerSF = v.findViewById(R.id.sendSpinnerSF);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(requireContext(),
@@ -159,7 +143,6 @@ public class SendFragment extends DialogFragment {
 
                             NumberValue = editNumber.getText().toString();
 
-                            APPEUI = (String) spinnerAPPEUI.getSelectedItem();
                             DEVEUI = (String) spinnerDEVEUI.getSelectedItem();
 
                             if(Integer.parseInt(NumberValue) >= 1 && Integer.parseInt(NumberValue) < 100) {
@@ -197,7 +180,6 @@ public class SendFragment extends DialogFragment {
                         editNumber.setText(Integer.toString(resetNbFrame));
 
                         spinnerDEVEUI.setSelection(0);
-                        spinnerAPPEUI.setSelection(0);
 
                         spinnerSF.setSelection(Integer.parseInt(resetSF.split(",")[1]), true);
 
@@ -217,9 +199,6 @@ public class SendFragment extends DialogFragment {
         void finish(String result);
     }
 
-    public void setAPPEUI(OnMyDialogUpdate dialogUpdate){
-        mDialogUpdateAPP = dialogUpdate;
-    }
 
     public void setDEVEUI(OnMyDialogUpdate dialogUpdate){
         mDialogUpdateDEV = dialogUpdate;

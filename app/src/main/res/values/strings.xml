@@ -57,8 +57,6 @@
     <string name="reportjson">Json</string>
     <string name="reportchoose">Select the format and the name of your report:</string>
     <string name="support">Online support</string>
-    <string name="configEUI">Nbr addresses to display for APP/DEV EUI :</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="configEUI">Nbr addresses to display for DEVEUI :</string>
 </resources>
 
