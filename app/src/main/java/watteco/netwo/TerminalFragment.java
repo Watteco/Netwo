@@ -14,6 +14,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -96,7 +97,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     //Variable par defaut configurable
     int MarginPerfect = 15, MarginGood = 10, MarginBad = 5, SNRPerfect = -5, SNRBad = -10, RSSIPerfect = -107, RSSIBad = -118;
-
+    private final List<String> allTXInfo = new ArrayList<>();
     private static final String TAG = "TerminalFragment";
 
     enum Connected {False, Pending, True}
@@ -147,7 +148,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private List<String> allCurrentNumber = new ArrayList<>();
     private List<String> allNumber = new ArrayList<>();
-    private List<String> allTXInfo = new ArrayList<>();
+    private final Integer defaultSpinnerEUI = 3;
     private List<Integer> allGateway = new ArrayList<>();
     private List<Integer> allAverageGateway = new ArrayList<>();
     private List<Integer> allMargin = new ArrayList<>();
@@ -176,8 +177,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private String DEVEUI = "Not available";
     private String DEVEUI_value = "";
-
-    private Integer defaultSpinnerEUI = 3;
+    int spMarginPerfect, spMarginGood, spMarginBad, spRSSIPerfect, spRSSIBad, spSNRPerfect, spSNRBad, spSpinnerEUI;
     SerialSocket socket;
     FusedLocationProviderClient mFusedLocationClient;
     Location gLocation;
@@ -295,9 +295,23 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         if (tmpView instanceof TextView) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 ((TextView) tmpView).setHorizontallyScrolling(false);
-                ((TextView) tmpView).setAutoSizeTextTypeUniformWithConfiguration(13,15,1,1);
+                ((TextView) tmpView).setAutoSizeTextTypeUniformWithConfiguration(13, 15, 1, 1);
             }
         }
+
+        SharedPreferences sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
+
+        spMarginPerfect = sharedPref.getInt("MarginPerfect", MarginPerfect);
+        spMarginGood = sharedPref.getInt("MarginGood", MarginGood);
+        spMarginBad = sharedPref.getInt("MarginBad", MarginBad);
+
+        spSNRPerfect = sharedPref.getInt("SNRPerfect", SNRPerfect);
+        spSNRBad = sharedPref.getInt("SNRBad", SNRBad);
+
+        spRSSIPerfect = sharedPref.getInt("RSSIPerfect", RSSIPerfect);
+        spRSSIBad = sharedPref.getInt("RSSIBad", RSSIBad);
+
+        spSpinnerEUI = sharedPref.getInt("spinnerEUI", defaultSpinnerEUI) - 1;
 
         receiveText = view.findViewById(R.id.textview);// TextView performance decreases with number of spans
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
@@ -778,10 +792,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public void collectData(String data){
         datas.add(data);
         try{
-            if(data.contains("NOK")){
+            if(data.contains("NOK")) {
                 Toast.makeText(getActivity(), "Not ok", Toast.LENGTH_LONG).show();
                 send("X");
-                send("S"+ paramNumber + "," + paramSF + "," + paramADR);
+                SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+
+                String spNumberValue = sharedPref.getString("NumberValue", "5");
+                String tmpSFValue = sharedPref.getString("SFValue", "12,5");
+                String spSFValue = tmpSFValue.split(",")[0];
+                String spADRValue = sharedPref.getString("ADRValue", "0");
+
+                send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
             }else if (data.contains("OK")){
                 Toast.makeText(getActivity(), "Ok", Toast.LENGTH_LONG).show();
 
@@ -1250,26 +1271,26 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
             // Connection indicator of the emmision
 
-            if(lastMargin >= MarginPerfect){
+            if (lastMargin >= spMarginPerfect) {
                 simplifiedEmissionCheck.setImageResource(R.drawable.wifi_perfect_green);
-            } else if (lastMargin >= MarginGood) {
+            } else if (lastMargin >= spMarginGood) {
                 simplifiedEmissionCheck.setImageResource(R.drawable.wifi_good_light_green);
-            }else if(lastMargin >= MarginBad){
+            } else if (lastMargin >= spMarginBad) {
                 simplifiedEmissionCheck.setImageResource(R.drawable.wifi_bad_orange);
-            }else {
+            } else {
                 simplifiedEmissionCheck.setImageResource(R.drawable.wifi_terribe_red);
             }
 
 
             // Connection indicator of the reception
 
-            if(lastRSSI >= RSSIPerfect && lastSNR >= SNRPerfect){
+            if (lastRSSI >= spRSSIPerfect && lastSNR >= spSNRPerfect) {
                 simplifiedReceptionCheck.setImageResource(R.drawable.wifi_perfect_green);
-            } else if (lastRSSI >= RSSIPerfect && lastSNR >= SNRBad || lastSNR >= SNRPerfect && lastRSSI >= RSSIBad) {
+            } else if (lastRSSI >= spRSSIPerfect && lastSNR >= spSNRBad || lastSNR >= spSNRPerfect && lastRSSI >= spRSSIBad) {
                 simplifiedReceptionCheck.setImageResource(R.drawable.wifi_good_light_green);
-            }else if(lastRSSI >= RSSIBad && lastSNR <= SNRBad || lastRSSI <= RSSIBad && lastSNR >= SNRBad || lastRSSI <= RSSIPerfect && lastRSSI >= RSSIBad){
+            } else if (lastRSSI >= spRSSIBad && lastSNR <= spSNRBad || lastRSSI <= spRSSIBad && lastSNR >= spSNRBad || lastRSSI <= spRSSIPerfect && lastRSSI >= spRSSIBad) {
                 simplifiedReceptionCheck.setImageResource(R.drawable.wifi_bad_orange);
-            }else{
+            } else {
                 simplifiedReceptionCheck.setImageResource(R.drawable.wifi_terribe_red);
             }
             simplifiedReceptionCheck.setScaleX(-1);
@@ -1497,17 +1518,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         ft.addToBackStack(null);
 
         Bundle bundle = new Bundle();
-
-        bundle.putInt("MarginPerfect",MarginPerfect);
-        bundle.putInt("MarginGood",MarginGood);
-        bundle.putInt("MarginBad",MarginBad);
-
-        bundle.putInt("RSSIPerfect",RSSIPerfect);
-        bundle.putInt("RSSIBad",RSSIBad);
-
-        bundle.putInt("SNRPerfect",SNRPerfect);
-        bundle.putInt("SNRBad",SNRBad);
-
         bundle.putString("whoCalledMe",str);
 
 
@@ -1520,36 +1530,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     void showDialogConfiguration() {
 
-        Bundle bundle = new Bundle();
-
-        bundle.putInt("MarginPerfect",MarginPerfect);
-        bundle.putInt("MarginGood",MarginGood);
-        bundle.putInt("MarginBad",MarginBad);
-
-        bundle.putInt("RSSIPerfect",RSSIPerfect);
-        bundle.putInt("RSSIBad",RSSIBad);
-
-        bundle.putInt("SNRPerfect",SNRPerfect);
-        bundle.putInt("SNRBad",SNRBad);
-
-        bundle.putInt("defaultSpinnerEUI",defaultSpinnerEUI);
 
         assert getFragmentManager() != null;
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ConfigurationDialog configurationDialog=new ConfigurationDialog();
         configurationDialog.show(ft, "Dialog Fragment");
 
-        configurationDialog.setDialogResult(result -> {
-            MarginPerfect = result.get(0);
-            MarginGood = result.get(1);
-            MarginBad = result.get(2);
-            RSSIPerfect = result.get(3);
-            RSSIBad = result.get(4);
-            SNRPerfect = result.get(5);
-            SNRBad = result.get(6);
-            defaultSpinnerEUI = result.get(7);
-        });
-        configurationDialog.setArguments(bundle);
+
     }
 
     void showDialogSend() {
@@ -1559,8 +1546,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         bundle.putString("APPEUI",APPEUI);
         bundle.putString("DEVEUI", DEVEUI);
 
-        bundle.putInt("defaultSpinnerEUI", defaultSpinnerEUI);
-
         assert getFragmentManager() != null;
         FragmentTransaction ft = getFragmentManager().beginTransaction();
 
@@ -1569,15 +1554,16 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         sendFragment.show(ft, "Dialog Fragment");
 
         sendFragment.setDialogResult(result -> {
-            paramSF = Integer.parseInt(result.get(0));
-            paramNumber = Integer.parseInt(result.get(1));
-            paramADR = Integer.parseInt(result.get(2));
-            APPEUI = result.get(3);
-            APPEUI_value = APPEUI.substring(APPEUI.length()-1);
-            DEVEUI = result.get(4);
-            DEVEUI_value = DEVEUI.substring(10,11);
-            send("S"+ paramNumber + "," + paramSF + "," + paramADR);
+            SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+
+            String spNumberValue = sharedPref.getString("NumberValue", "5");
+            String tmpSFValue = sharedPref.getString("SFValue", "12,5");
+            String spSFValue = tmpSFValue.split(",")[0];
+            String spADRValue = sharedPref.getString("ADRValue", "0");
+
+            send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
         });
+
 
         sendFragment.setAPPEUI( result -> {
             APPEUI = result;

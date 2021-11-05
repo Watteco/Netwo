@@ -1,6 +1,7 @@
 package watteco.netwo;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,10 +27,12 @@ import java.util.Objects;
  * create an instance of this fragment.
  */
 public class SendFragment extends DialogFragment {
-    int resetSF = 5, resetNbFrame = 5, resetADR = 0;
+    int resetNbFrame = 5, resetADR = 0;
+    String resetSF = "12,5";
+
     private enum Connected {False, Pending, True}
+
     String APPEUI, DEVEUI;
-    Integer defaultSpinnerEUI;
     CheckBox checkBoxADR;
     EditText editNumber;
     Spinner spinnerSF, spinnerAPPEUI, spinnerDEVEUI;
@@ -37,7 +40,7 @@ public class SendFragment extends DialogFragment {
     OnMyDialogUpdate mDialogUpdateAPP;
     OnMyDialogUpdate mDialogUpdateDEV;
 
-    String NumberValue,SFValue,ADRValue;
+    String NumberValue, SFValue, SFValueIndex, ADRValue;
     boolean initSpinnerAPP = true;
     boolean initSpinnerDEV = true;
 
@@ -56,7 +59,6 @@ public class SendFragment extends DialogFragment {
 
         APPEUI = arg.getString("APPEUI");
         DEVEUI = arg.getString("DEVEUI");
-        defaultSpinnerEUI = arg.getInt("defaultSpinnerEUI");
 
         terminalFragment = (TerminalFragment) getFragmentManager().findFragmentByTag("terminal");
         assert terminalFragment != null;
@@ -68,17 +70,27 @@ public class SendFragment extends DialogFragment {
         View v = inflater.inflate(R.layout.fragment_send, container, false);
         Objects.requireNonNull(getDialog()).setCanceledOnTouchOutside(true);
 
+        SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+
+        String spNumberValue = sharedPref.getString("NumberValue", String.valueOf(resetNbFrame));
+        String tmpSFValue = sharedPref.getString("SFValue", String.valueOf(resetSF));
+        String spSFValue = tmpSFValue.split(",")[0];
+        String spSFValueIndex = tmpSFValue.split(",")[1];
+        String spADRValue = sharedPref.getString("ADRValue", String.valueOf(resetADR));
+
+        int spSpinnerEUI = sharedPref.getInt("spinnerEUI", 2);
+
         spinnerAPPEUI = v.findViewById(R.id.sendSpinnerAPPEUI);
         spinnerDEVEUI = v.findViewById(R.id.sendSpinnerDEVEUI);
 
         List<String> arrayListAPPEUI = new ArrayList<>();
 
-        for (int i = 0; i < defaultSpinnerEUI; i++) {
+        for (int i = 0; i < spSpinnerEUI; i++) {
             arrayListAPPEUI.add("70B3D5E75F60000" + i);
         }
 
         List<String> arrayListDEVEUI = new ArrayList<>();
-        for (int i = 0; i < defaultSpinnerEUI; i++) {
+        for (int i = 0; i < spSpinnerEUI; i++) {
             arrayListDEVEUI.add("70B3D5E75E" + i + "0DEDC");
         }
 
@@ -120,34 +132,29 @@ public class SendFragment extends DialogFragment {
             }
         });
         spinnerDEVEUI.setSelection(arrayListDEVEUI.indexOf(DEVEUI));
-        spinnerSF = v.findViewById(R.id.sendSpinnerSF);
 
+        spinnerSF = v.findViewById(R.id.sendSpinnerSF);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(requireContext(),
                 R.array.SF_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerSF.setAdapter(adapter);
-        spinnerSF.setSelection(5);
-
+        spinnerSF.setSelection(Integer.parseInt(spSFValueIndex));
 
         editNumber = v.findViewById(R.id.sendNumber);
-        editNumber.setText(Integer.toString(resetNbFrame));
+        editNumber.setText(spNumberValue);
 
 
         checkBoxADR = v.findViewById(R.id.sendADR);
-        checkBoxADR.setChecked(resetADR != 0);
+        checkBoxADR.setChecked(spADRValue.equals("1"));
 
         v.findViewById(R.id.sendParameters).setOnClickListener(
                 v12 -> {
-
-
                     if( mDialogResult != null){
-
-
                         TerminalFragment.Connected connected = terminalFragment.getConnection();
                         if(connected.equals(TerminalFragment.Connected.True)){
 
-
                             SFValue = (String) spinnerSF.getSelectedItem();
+                            SFValueIndex = String.valueOf(spinnerSF.getSelectedItemPosition());
                             if(editNumber.getText().toString().isEmpty()) editNumber.setText("5");
 
                             NumberValue = editNumber.getText().toString();
@@ -155,18 +162,19 @@ public class SendFragment extends DialogFragment {
                             APPEUI = (String) spinnerAPPEUI.getSelectedItem();
                             DEVEUI = (String) spinnerDEVEUI.getSelectedItem();
 
-                            if(Integer.parseInt(NumberValue) >= 1 && Integer.parseInt(NumberValue) < 100){
+                            if(Integer.parseInt(NumberValue) >= 1 && Integer.parseInt(NumberValue) < 100) {
 
                                 ADRValue = checkBoxADR.isChecked() ? "1" : "0";
 
-                                List<String> list = new ArrayList<>();
-                                list.add(SFValue);
-                                list.add(NumberValue);
-                                list.add(ADRValue);
-                                list.add(APPEUI);
-                                list.add(DEVEUI);
+                                SharedPreferences.Editor editor = sharedPref.edit();
 
-                                mDialogResult.finish(list);
+                                editor.putString("NumberValue", NumberValue);
+                                editor.putString("SFValue", SFValue + "," + SFValueIndex);
+                                editor.putString("ADRValue", ADRValue);
+                                editor.apply();
+
+                                mDialogResult.finish("");
+
                                 InputMethodManager mgr = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                                 mgr.hideSoftInputFromWindow(editNumber.getWindowToken(), 0);
                                 SendFragment.this.dismiss();
@@ -178,8 +186,6 @@ public class SendFragment extends DialogFragment {
                         }else{
                             Toast.makeText(getContext(),"Waiting for BLE connection to establish", Toast.LENGTH_LONG).show();
                         }
-
-
                     }
 
                 }
@@ -193,7 +199,7 @@ public class SendFragment extends DialogFragment {
                         spinnerDEVEUI.setSelection(0);
                         spinnerAPPEUI.setSelection(0);
 
-                        spinnerSF.setSelection(resetSF,true);
+                        spinnerSF.setSelection(Integer.parseInt(resetSF.split(",")[1]), true);
 
                         checkBoxADR.setChecked(resetADR != 0);
 
@@ -208,7 +214,7 @@ public class SendFragment extends DialogFragment {
     public void setDialogResult(OnMyDialogResult dialogResult){ mDialogResult = dialogResult; }
 
     public interface OnMyDialogResult{
-        void finish(List<String> result);
+        void finish(String result);
     }
 
     public void setAPPEUI(OnMyDialogUpdate dialogUpdate){

@@ -1,5 +1,7 @@
 package watteco.netwo;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -37,15 +39,6 @@ public class MyDialogFragment extends DialogFragment {
         assert arg != null;
         whoCalledMe = arg.getString("whoCalledMe");
 
-        MarginPerfect = arg.getInt("MarginPerfect");
-        MarginGood = arg.getInt("MarginGood");
-        MarginBad = arg.getInt("MarginBad");
-
-        SNRPerfect = arg.getInt("SNRPerfect");
-        SNRBad = arg.getInt("SNRBad");
-
-        RSSIPerfect = arg.getInt("RSSIPerfect");
-        RSSIBad = arg.getInt("RSSIBad");
         // Pick a style based on the num.
         int style, theme;
 
@@ -61,12 +54,25 @@ public class MyDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_my_dialog, container, false);
 
+        SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+
+        int spMarginPerfect = sharedPref.getInt("MarginPerfect", 15);
+        int spMarginGood = sharedPref.getInt("MarginGood", 10);
+        int spMarginBad = sharedPref.getInt("MarginBad", 5);
+
+        int spSNRPerfect = sharedPref.getInt("SNRPerfect", -5);
+        int spSNRBad = sharedPref.getInt("SNRBad", -10);
+
+        int spRSSIPerfect = sharedPref.getInt("RSSIPerfect", -107);
+        int spRSSIBad = sharedPref.getInt("RSSIBad", -118);
+
+
         Resources c = requireContext().getResources();
         TextView text = v.findViewById(R.id.textDialog);
         ImageView image = v.findViewById(R.id.imageDialog);
 
-        image.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,0,0));
-            switch(whoCalledMe) {
+        image.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 0));
+        switch (whoCalledMe) {
             case "about":
                 text.setText(c.getString(R.string.aboutText));
                 break;
@@ -89,11 +95,11 @@ public class MyDialogFragment extends DialogFragment {
                 text.setText(c.getString(R.string.descriptionSF) + "\n" + c.getString(R.string.descriptionRX) + "\n" + c.getString(R.string.descriptionDelay));
                 break;
             case "EmissionCheck":
-                text.setText("Margin >= " + MarginPerfect + " -> " + c.getString(R.string.perfect) + " \n " + MarginPerfect + " > Margin >= " + MarginGood + "-> " + c.getString(R.string.excellent) + " \n " + MarginGood + " > Margin >= " + MarginBad + " -> " + c.getString(R.string.good)+ " \n " + MarginBad + " >= Margin -> " + c.getString(R.string.bad));
+                text.setText("Margin >= " + spMarginPerfect + " -> " + c.getString(R.string.perfect) + " \n " + spMarginPerfect + " > Margin >= " + spMarginGood + "-> " + c.getString(R.string.excellent) + " \n " + spMarginGood + " > Margin >= " + spMarginBad + " -> " + c.getString(R.string.good) + " \n " + spMarginBad + " >= Margin -> " + c.getString(R.string.bad));
                 break;
             case "ReceptionCheck":
-                image.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,0,1));
-                text.setText("A:" + SNRPerfect + "\nB:"+SNRBad + "\nC:" + RSSIBad + "\nD:" + RSSIPerfect);
+                image.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+                text.setText("A:" + spSNRPerfect + "\nB:" + spSNRBad + "\nC:" + spRSSIBad + "\nD:" + spRSSIPerfect);
                 break;
             default:
                 text.setText(R.string.error);
