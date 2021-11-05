@@ -1,0 +1,64 @@
+<resources>
+    <string name="app_name">Netw\'O</string>
+    <string name="devices">Bluetooth LE Devices</string>
+    <string name="location_permission_title">Location permission required (FINE)</string>
+    <string name="location_permission_message">This app does not use location information, but scanning for Bluetooth LE devices requires this permission</string>
+    <string name="location_permission_title_two">Location permission required (COARSE)</string>
+    <string name="location_permission_message_two">Since Android 10 this app require CORSE location to scan BLE device.</string>
+    <string name="location_denied_title">Location permission denied</string>
+    <string name="location_denied_message">As location permission has not been granted, this app cannot scan for Bluetooth LE devices.</string>
+    <string name="pairing_request">PAIRING requested-> Perform pairing steps. Connect again</string>
+    <string name="emission"><u>Emission:</u></string>
+    <string name="reception"><u>Reception:</u></string>
+    <string name="aboutText">This app has been developed by Olivier STEPHAN for Watteco. All right reserved V0.95</string>
+    <string name="received">You received </string>
+    <string name="percentage">% of the data.</string>
+    <string name="descriptionMargin">Margin in dB between the received signal level and the minimum reception level.</string>
+    <string name="descriptionRSSI">The Received Signal Strength Indication (RSSI) is the received signal power in milliwatts and is measured in dBm.</string>
+    <string name="descriptionSNR">Signal-to-Noise Ratio (SNR) is the ratio between the received power signal and the noise floor power level.</string>
+    <string name="descriptionGateway">It is the number of gateway you are communicating with.</string>
+    <string name="descriptionSF">Spreading Factor (SF) : defines the number of bits that can be encoded by a symbol.</string>
+    <string name="errorThrehsold">"You have to select correct threshold"</string>
+    <string name="clear">You cleared the data</string>
+    <string name="perfect">Perfect</string>
+    <string name="excellent">Excellent</string>
+    <string name="good">Good</string>
+    <string name="bad">Bad</string>
+    <string name="averageGateway"> Average number of gateways : </string>
+    <string name="thereIs">There is</string>
+    <string name="gateway">gateway</string>
+    <string name="gateways">gateways</string>
+    <string name="average">Average</string>
+    <string name="apply">Apply changes</string>
+    <string name="reset">Reset values</string>
+    <string name="thresholdSNR">SNR threshold :</string>
+    <string name="thresholdRSSI">RSSI threshold:</string>
+    <string name="thresholdMargin">Margin threshold:</string>
+    <string name="snrDescription">If SNR > 0, the received signal operates above the noise floor.</string>
+    <string name="RSSIDescription">If RSSI=-30dBm: signal is strong. If RSSI=-120dBm: signal is weak.</string>
+    <string name="MarginDescription">Higher is better.</string>
+    <string name="error">There is an error./n Please contact us to solve it.</string>
+    <string name="send">Send</string>
+    <string name="receive">Start test radio</string>
+    <string name="numberOfFrame">Number of frame</string>
+    <string name="descriptionRX">Reception window</string>
+    <string name="descriptionDelay">Delay in second</string>
+    <string name="useScan">	&lt;use SCAN to refresh devices&gt;</string>
+    <string name="blSettings">Bluetooth settings</string>
+    <string name="blDisabled">&lt;bluetooth is disabled&gt;</string>
+    <string name="about">About</string>
+    <string name="back">Scan BLE</string>
+    <string name="scanning">&lt;scanning...&gt;</string>
+    <string name="wrongSF">You have to choose a number of frame between 1 and 100 included.</string>
+    <string name="chartNoData">No chart data available</string>
+    <string name="wrongNbrTrame">You have to select a number of frame between 1 and 100</string>
+    <string name="envoi">Send report</string>
+    <string name="reportcsv">CSV</string>
+    <string name="reportjson">Json</string>
+    <string name="reportchoose">Select the format and the name of your report:</string>
+    <string name="support">Online support</string>
+    <string name="configEUI">Nbr addresses to display for APP/DEV EUI :</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
+

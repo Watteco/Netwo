@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_gravity="center"
+    android:minHeight="150dp"
+    android:minWidth="320dp"
+    android:padding="10dp"
+    android:gravity="center"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/reportchoose"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="6sp"
+        android:autoSizeMaxTextSize="15sp"
+        android:autoSizeStepGranularity="0.5sp"
+        android:textStyle="bold"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.15"/>
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.7"
+            android:singleLine="true"
+            android:maxLength="30"
+            android:id="@+id/reportName"/>
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.15"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal">
+            <Button
+            android:id="@+id/reportjson"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:text="@string/reportjson"
+            android:textAppearance="?android:textAppearanceMedium"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="10sp"
+            android:autoSizeMaxTextSize="14sp"
+            android:autoSizeStepGranularity="1sp"
+                android:textColor="@color/colorWhite"
+            android:textStyle="italic"/>
+
+            <Button
+            android:id="@+id/reportcsv"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:text="@string/reportcsv"
+            android:textAppearance="?android:textAppearanceMedium"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="10sp"
+            android:autoSizeMaxTextSize="14sp"
+            android:autoSizeStepGranularity="1sp"
+                android:textColor="@color/colorWhite"
+            android:textStyle="italic"/>
+    </LinearLayout>
+
+
+</LinearLayout>

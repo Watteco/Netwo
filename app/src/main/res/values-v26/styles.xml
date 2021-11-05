@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style parent="Theme.AppCompat.NoActionBar" name="AppTheme">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style parent="ThemeOverlay.AppCompat.Dark.ActionBar" name="AppTheme.AppBarOverlay">
+
+    </style>
+
+
+
+    <style name="Toolbar.TitleText" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:autoSizeTextType" tools:targetApi="o">uniform</item>
+        <item name="android:autoSizeMinTextSize" tools:targetApi="o">5sp</item>
+        <item name="android:autoSizeMaxTextSize" tools:targetApi="o">10sp</item>
+        <item name="android:autoSizeStepGranularity" tools:targetApi="o">1sp</item>
+    </style>
+
+    <style name="Toolbar.TitleTextDevice" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:autoSizeTextType">uniform</item>
+        <item name="android:autoSizeMinTextSize">8dp</item>
+        <item name="android:autoSizeMaxTextSize">15dp</item>
+        <item name="android:autoSizeStepGranularity">1dp</item>
+    </style>
+
+</resources>

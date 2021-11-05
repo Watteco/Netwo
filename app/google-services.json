@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "98408419770",
+    "firebase_url": "https://nkewattecobluetoothle.firebaseio.com",
+    "project_id": "nkewattecobluetoothle",
+    "storage_bucket": "nkewattecobluetoothle.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:98408419770:android:405ffe17e486da39774d83",
+        "android_client_info": {
+          "package_name": "watteco.netwo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "98408419770-bm7b4ddogd56f378ek03v20kofgegegg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHwmXCuf7lJTcXUK2cjkNSkQ6LW95C9bA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "98408419770-bm7b4ddogd56f378ek03v20kofgegegg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

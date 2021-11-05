@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="10"
+    android:orientation="vertical"
+    android:id="@+id/terminal"
+    android:keepScreenOn="true">
+
+    <TextView
+        android:id="@+id/textview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0"
+        android:gravity="bottom"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginLeft="5dp"
+        android:id="@+id/graphModeTX"
+        android:weightSum="10"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.2"
+            android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.5"
+                    android:layout_marginBottom="0dp"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/batteryImageTX"
+                    android:src="@drawable/battery_missing"/>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:textColor="@color/colorWhite"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="4sp"
+                    android:autoSizeMaxTextSize="10sp"
+                    android:autoSizeStepGranularity="0.5sp"
+                    android:id="@+id/batteryTextTX"
+                    android:gravity="left"/>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4"/>
+
+
+        </LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5"
+            android:id="@+id/percentageDataReceiveTX"
+            android:gravity="center"/>
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/lineChartMargin"
+                    android:layout_width="match_parent"
+                    android:layout_weight="3.1"
+                    android:layout_height="0px" />
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/lineChartSFTX"
+                    android:layout_width="match_parent"
+                    android:layout_weight="3.1"
+                    android:layout_height="0px" />
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/lineChartGateway"
+                    android:layout_width="match_parent"
+                    android:layout_weight="3.1"
+                    android:layout_height="0px" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginLeft="5dp"
+        android:id="@+id/graphModeRX"
+        android:weightSum="10"
+        android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.2"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.5"
+                        android:layout_marginBottom="0dp"
+                        android:layout_gravity="center_vertical"
+                        android:id="@+id/batteryImageRX"
+                        android:src="@drawable/battery_missing"/>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2"
+                        android:textColor="@color/colorWhite"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="4sp"
+                        android:autoSizeMaxTextSize="10sp"
+                        android:autoSizeStepGranularity="0.5sp"
+                        android:id="@+id/batteryTextRX"
+                        android:gravity="left"/>
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="4"/>
+
+
+                </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.5"
+                    android:id="@+id/percentageDataReceiveRX"
+                    android:gravity="center"/>
+
+
+
+
+
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/lineChartSNR"
+                    android:layout_width="match_parent"
+                    android:layout_weight="3.1"
+                    android:layout_height="0px" />
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/lineChartRSSI"
+                    android:layout_width="match_parent"
+                    android:layout_weight="3.1"
+                    android:layout_height="0px" />
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/lineChartSFRX"
+                    android:layout_width="match_parent"
+                    android:layout_weight="3.1"
+                    android:layout_height="0px" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/linearsimplifiedmode"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="10"
+        android:layout_marginRight="5dp"
+        android:layout_marginLeft="5dp"
+        android:orientation="vertical"
+        android:weightSum="10">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="0.2">
+
+                        <ImageView
+                            android:id="@+id/simplifiedBatteryImage"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_weight="0.5"
+                            android:src="@drawable/battery_missing" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="3.75"
+                            android:id="@+id/simplifiedBatteryText"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="4sp"
+                            android:autoSizeMaxTextSize="10sp"
+                            android:autoSizeStepGranularity="0.5sp"
+                            android:textColor="@color/colorWhite"
+                            android:gravity="left"/>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:id="@+id/simplifiedOperator"
+                            android:textColor="@color/colorWhite"
+                            android:textAlignment="center"
+                            android:gravity="center"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="4sp"
+                            android:autoSizeMaxTextSize="10sp"
+                            android:autoSizeStepGranularity="0.5sp"
+                            android:layout_weight="2.25"/>
+
+
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1.2"
+                        android:layout_marginTop="10dp"
+
+                        android:layout_marginBottom="10dp"
+                        android:orientation="horizontal">
+                        <Button
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="5"
+                            android:scaleX="0.8"
+                            android:scaleY="0.8"
+                            android:text="@string/receive"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="8sp"
+                            android:autoSizeMaxTextSize="12sp"
+                            android:autoSizeStepGranularity="0.5sp"
+                            android:id="@+id/simplifiedSend"/>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="5"
+                            android:id="@+id/simplifiedGateway"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="9sp"
+                            android:autoSizeMaxTextSize="15sp"
+                            android:autoSizeStepGranularity="0.5sp"
+                            android:textColor="@color/colorWhite"
+                            android:gravity="center"/>
+                        <ImageView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:id="@+id/simplifiedGatewayImage"
+                            android:src="@drawable/icon_antenna"
+                            android:layout_weight="5"/>
+
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="0.5">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="5"
+                            android:text="@string/emission"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="15sp"
+                            android:autoSizeMaxTextSize="25sp"
+                            android:autoSizeStepGranularity="1sp"
+                            android:textColor="@color/colorWhite"/>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="10"
+                            android:id="@+id/simplifiedEmission"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="15sp"
+                            android:autoSizeMaxTextSize="20sp"
+                            android:autoSizeStepGranularity="1sp"
+                            android:textColor="@color/colorWhite"
+                            android:gravity="center_vertical"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/linearEmission"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="3.8"
+                        android:orientation="horizontal"
+                        android:weightSum="10">
+
+
+
+                        <ImageView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/device"
+                            android:layout_weight="3"/>
+                        <ImageView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/wifi_question_mark"
+                            android:id="@+id/simplifiedEmissionCheck"
+                            android:layout_weight="4" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="3"
+                            android:text="Margin"
+                            android:id="@+id/simplifiedMargin"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="12sp"
+                            android:autoSizeMaxTextSize="20sp"
+                            android:autoSizeStepGranularity="1sp"
+                            android:textColor="@color/colorWhite"
+                            android:gravity="center"/>
+
+
+
+                    </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:text="@string/reception"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="15sp"
+                android:autoSizeMaxTextSize="25sp"
+                android:autoSizeStepGranularity="1sp"
+                android:textColor="@color/colorWhite"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:id="@+id/simplifiedReceptionInfo"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="15sp"
+                android:autoSizeMaxTextSize="20sp"
+                android:autoSizeStepGranularity="1sp"
+                android:textColor="@color/colorWhite"
+                android:gravity="center_vertical"/>
+        </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/linearReception"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="3.8"
+                        android:orientation="horizontal"
+                        android:weightSum="10">
+
+
+
+                        <ImageView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/device"
+                            android:layout_weight="3"/>
+
+                        <ImageView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="4"
+                            android:id="@+id/simplifiedReceptionCheck"
+                            android:src="@drawable/wifi_question_mark_flipped" />
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="3"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="0dp"
+                                android:layout_weight="0.5"
+                                android:text="RSSI"
+                                android:id="@+id/simplifiedRSSI"
+                                android:autoSizeTextType="uniform"
+                                android:autoSizeMinTextSize="15sp"
+                                android:autoSizeMaxTextSize="20sp"
+                                android:autoSizeStepGranularity="1sp"
+                                android:textColor="@color/colorWhite"
+                                android:gravity="center"/>
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="0dp"
+                                android:layout_weight="0.5"
+                                android:text="SNR"
+                                android:id="@+id/simplifiedSNR"
+                                android:autoSizeTextType="uniform"
+                                android:autoSizeMinTextSize="15sp"
+                                android:autoSizeMaxTextSize="20sp"
+                                android:autoSizeStepGranularity="1sp"
+                                android:textColor="@color/colorWhite"
+                                android:gravity="center"/>
+
+                        </LinearLayout>
+
+
+
+                    </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:id="@+id/viewBeforeSendText"
+        android:background="?android:attr/listDivider"
+        android:layout_weight="0.01"
+        android:layout_height="0dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:id="@+id/linearSendText"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/send_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:inputType="text|textNoSuggestions"
+            android:singleLine="true" />
+
+        <ImageButton
+            android:id="@+id/send_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_send_white_24dp" />
+    </LinearLayout>
+
+</LinearLayout>
+

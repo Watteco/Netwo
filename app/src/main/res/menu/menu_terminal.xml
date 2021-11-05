@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <item
+        android:id="@+id/textmode"
+        android:title="Debug mode"/>
+    <item
+        android:id="@+id/simplifiedmode"
+        android:icon="@drawable/simple_graph"
+        android:title="Simplified mode"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/graphicalmodetx"
+        android:icon="@drawable/graphtx"
+        android:title="Graphical mode tx"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/graphicalmoderx"
+        android:icon="@drawable/graphrx"
+        android:title="Graphical mode rx"
+        app:showAsAction="always"/>
+
+    <item
+        android:id="@+id/clear"
+        android:icon="@drawable/ic_delete_white_24dp"
+        android:title="Clear"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/configuration"
+        android:title="Configuration" />
+
+    <item
+        android:id="@+id/envoi"
+        android:title="@string/envoi" />
+
+    <item
+        android:id="@+id/sendLogs"
+        android:visible="false"
+        android:title="Send logs"/>
+
+    <item
+        android:id="@+id/back"
+        android:name="android:homeAsUpIndicator"
+        android:title="@string/back"/>
+
+    <item
+        android:id="@+id/supportRedirect2"
+        android:title="@string/support" />
+
+    <item
+        android:id="@+id/about"
+        android:title="@string/about" />
+
+</menu>
