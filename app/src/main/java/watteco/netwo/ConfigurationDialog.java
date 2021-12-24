@@ -57,7 +57,7 @@ public class ConfigurationDialog extends DialogFragment implements View.OnClickL
             arrayEUI.add(i + 1);
         }
 
-        ArrayAdapter arrayAdapter = new ArrayAdapter(getContext(), R.layout.support_simple_spinner_dropdown_item, arrayEUI);
+        ArrayAdapter arrayAdapter = new ArrayAdapter(requireContext(), R.layout.support_simple_spinner_dropdown_item, arrayEUI);
         spinnerEUI.setAdapter(arrayAdapter);
         spinnerEUI.setSelection(spSpinnerEUI);
 

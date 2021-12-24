@@ -447,66 +447,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.clear) {
-            receiveText.setText("~" + R.string.clear + "~\n");
-            percentageReceivedDataTX.setText("");
-            percentageReceivedDataRX.setText("");
-            simplifiedRSSI.setText("RSSI");
-            simplifiedMargin.setText("Margin");
-            simplifiedSNR.setText("SNR");
-            simplifiedEmission.setText(" SF : ");
-            simplifiedReceptionInfo.setText("");
-            simplifiedGateway.setText("");
-            simplifiedOperator.setText("");
-
-            simplifiedReceptionCheck.setImageResource(R.drawable.wifi_question_mark_flipped);
-            simplifiedReceptionCheck.setScaleX(1);
-            simplifiedEmissionCheck.setImageResource(R.drawable.wifi_question_mark);
-            simplifiedBatteryText.setText("");
-            simplifiedBatteryImage.setImageResource(R.drawable.battery_missing);
-
-
-            datas = new ArrayList<>();
-            reportData = new JSONArray();
-            reportDataCount = 0;
-            allCurrentNumber = new ArrayList<>();
-            allNumber = new ArrayList<>();
-            allGateway = new ArrayList<>();
-            allMargin = new ArrayList<>();
-            allSNR = new ArrayList<>();
-            allRSSI = new ArrayList<>();
-            allSFTX = new ArrayList<>();
-            allSFRX = new ArrayList<>();
-            allWindows = new ArrayList<>();
-            allDelay = new ArrayList<>();
-            allOperator = new ArrayList<>();
-            allBatteryVoltage = new ArrayList<>();
-
-            allAverageGateway = new ArrayList<>();
-            allAverageMargin = new ArrayList<>();
-            allAverageRSSI = new ArrayList<>();
-            allAverageSNR = new ArrayList<>();
-
-            graphSNR.getXAxis().setAxisMaximum(2);
-            graphSNR.getXAxis().setAxisMaximum(2);
-            graphRSSI.getXAxis().setAxisMaximum(2);
-            graphMargin.getXAxis().setAxisMaximum(2);
-            graphSFRX.getXAxis().setAxisMaximum(2);
-            graphSFTX.getXAxis().setAxisMaximum(2);
-            graphGateway.getXAxis().setAxisMaximum(2);
-
-            offset = 0;
-
-            addData("SNR", graphSNR);
-            addData("RSSI", graphRSSI);
-            addData("Margin",graphMargin);
-            addData("SFTX",graphSFTX);
-            addData("Nb gateway",graphGateway);
-            addData("SFRX",graphSFRX);
-
-            drawGradient(graphSNR);
-            drawGradient(graphRSSI);
-            drawGradient(graphMargin);
-
+            showResetPopup();
             return true;
         } else if (id == R.id.textmode) {
             if (!currentMode.equals("text")) {
@@ -591,13 +532,76 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         else if (id == R.id.envoi) {
             showDialogReport();
             return true;
-        }
-        else if(id == R.id.sendLogs){
+        } else if (id == R.id.sendLogs) {
             showLogsReport();
             return true;
         } else {
             return super.onOptionsItemSelected(item);
         }
+    }
+
+    private boolean clearEverything() {
+        receiveText.setText("~" + R.string.clear + "~\n");
+        percentageReceivedDataTX.setText("");
+        percentageReceivedDataRX.setText("");
+        simplifiedRSSI.setText("RSSI");
+        simplifiedMargin.setText("Margin");
+        simplifiedSNR.setText("SNR");
+        simplifiedEmission.setText(" SF : ");
+        simplifiedReceptionInfo.setText("");
+        simplifiedGateway.setText("");
+        simplifiedOperator.setText("");
+
+        simplifiedReceptionCheck.setImageResource(R.drawable.wifi_question_mark_flipped);
+        simplifiedReceptionCheck.setScaleX(1);
+        simplifiedEmissionCheck.setImageResource(R.drawable.wifi_question_mark);
+        simplifiedBatteryText.setText("");
+        simplifiedBatteryImage.setImageResource(R.drawable.battery_missing);
+
+
+        datas = new ArrayList<>();
+        reportData = new JSONArray();
+        reportDataCount = 0;
+        allCurrentNumber = new ArrayList<>();
+        allNumber = new ArrayList<>();
+        allGateway = new ArrayList<>();
+        allMargin = new ArrayList<>();
+        allSNR = new ArrayList<>();
+        allRSSI = new ArrayList<>();
+        allSFTX = new ArrayList<>();
+        allSFRX = new ArrayList<>();
+        allWindows = new ArrayList<>();
+        allDelay = new ArrayList<>();
+        allOperator = new ArrayList<>();
+        allBatteryVoltage = new ArrayList<>();
+
+        allAverageGateway = new ArrayList<>();
+        allAverageMargin = new ArrayList<>();
+        allAverageRSSI = new ArrayList<>();
+        allAverageSNR = new ArrayList<>();
+
+        graphSNR.getXAxis().setAxisMaximum(2);
+        graphSNR.getXAxis().setAxisMaximum(2);
+        graphRSSI.getXAxis().setAxisMaximum(2);
+        graphMargin.getXAxis().setAxisMaximum(2);
+        graphSFRX.getXAxis().setAxisMaximum(2);
+        graphSFTX.getXAxis().setAxisMaximum(2);
+        graphGateway.getXAxis().setAxisMaximum(2);
+
+        offset = 0;
+
+        addData("SNR", graphSNR);
+        addData("RSSI", graphRSSI);
+        addData("Margin", graphMargin);
+        addData("SFTX", graphSFTX);
+        addData("Nb gateway", graphGateway);
+        addData("SFRX", graphSFRX);
+
+        drawGradient(graphSNR);
+        drawGradient(graphRSSI);
+        drawGradient(graphMargin);
+
+        return true;
     }
 
     private void showLogsReport() {
@@ -608,7 +612,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         Bundle bundle = new Bundle();
 
         String logsString = "";
-        for(String log : socket.logs){
+        for (String log : socket.logs) {
             logsString += log + "\n";
         }
         
@@ -1046,26 +1050,27 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
         }
 
-        Integer lastMargin = allMargin.get(allMargin.size()-1);
-        Integer lastRSSI = allRSSI.get(allRSSI.size()-1);
-        Integer lastSNR = allSNR.get(allSNR.size()-1);
-        Integer lastSFTX = allSFTX.get(allSFTX.size()-1);
-        Integer lastSFRX = allSFRX.get(allSFRX.size()-1);
-        Integer lastGateway = allGateway.get(allGateway.size()-1);
-        Integer lastOperator = allOperator.get(allOperator.size()-1);
-        Integer lastWindows = allWindows.get(allWindows.size()-1);
-        Integer lastDelay = allDelay.get(allDelay.size()-1);
-        String lastOperatorName = Objects.requireNonNull(allOperatorName.get(lastOperator)).toString().toUpperCase();
+        Integer lastMargin = allMargin.get(allMargin.size() - 1);
+        Integer lastRSSI = allRSSI.get(allRSSI.size() - 1);
+        Integer lastSNR = allSNR.get(allSNR.size() - 1);
+        Integer lastSFTX = allSFTX.get(allSFTX.size() - 1);
+        Integer lastSFRX = allSFRX.get(allSFRX.size() - 1);
+        Integer lastGateway = allGateway.get(allGateway.size() - 1);
+        Integer lastOperator = allOperator.get(allOperator.size() - 1);
+        Integer lastWindows = allWindows.get(allWindows.size() - 1);
+        Integer lastDelay = allDelay.get(allDelay.size() - 1);
 
-        temp.put("Gateway",lastGateway);
-        temp.put("Margin",lastMargin);
-        temp.put("SFTX",lastSFTX);
-        temp.put("SNR",lastSNR);
-        temp.put("RSSI",lastRSSI);
-        temp.put("Windows",lastWindows);
-        temp.put("SFRX",lastSFRX);
-        temp.put("Delay",lastDelay);
-        temp.put("OperatorIndex",lastOperator);
+        String lastOperatorName = allOperatorName.contains(lastOperator) ? Objects.requireNonNull(allOperatorName.get(lastOperator)).toString().toUpperCase() : "Unknown";
+
+        temp.put("Gateway", lastGateway);
+        temp.put("Margin", lastMargin);
+        temp.put("SFTX", lastSFTX);
+        temp.put("SNR", lastSNR);
+        temp.put("RSSI", lastRSSI);
+        temp.put("Windows", lastWindows);
+        temp.put("SFRX", lastSFRX);
+        temp.put("Delay", lastDelay);
+        temp.put("OperatorIndex", lastOperator);
         temp.put("OperatorName",lastOperatorName);
 
 
@@ -1378,41 +1383,41 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         switch(label){
             case "SNR":
                 for(int i=0; i<allCurrentNumber.size(); i++){
-                    dataVals.add(new Entry(Integer.valueOf(allCurrentNumber.get(i).split("/")[1]) -1,allSNR.get(i)));
+                    dataVals.add(new Entry(Integer.parseInt(allCurrentNumber.get(i).split("/")[1]) - 1, allSNR.get(i)));
                 }
                 break;
             case "RSSI":
                 for(int i=0; i<allCurrentNumber.size(); i++){
-                    dataVals.add(new Entry(Integer.valueOf(allCurrentNumber.get(i).split("/")[1]) -1,allRSSI.get(i)));
+                    dataVals.add(new Entry(Integer.parseInt(allCurrentNumber.get(i).split("/")[1]) - 1, allRSSI.get(i)));
                 }
                 break;
             case "Margin":
                 for(int i=0; i<allCurrentNumber.size(); i++){
-                    
-                    dataVals.add(new Entry(Integer.valueOf(allCurrentNumber.get(i).split("/")[1]) -1,allMargin.get(i)));
+
+                    dataVals.add(new Entry(Integer.parseInt(allCurrentNumber.get(i).split("/")[1]) - 1, allMargin.get(i)));
                 }
                 break;
             case "SFTX":
                 for(int i=0; i<allCurrentNumber.size(); i++){
-                    
-                    dataVals.add(new Entry(Integer.valueOf(allCurrentNumber.get(i).split("/")[1]) -1,allSFTX.get(i)));
+
+                    dataVals.add(new Entry(Integer.parseInt(allCurrentNumber.get(i).split("/")[1]) - 1, allSFTX.get(i)));
                 }
                 break;
             case "Nb gateway":
                 for(int i=0; i<allCurrentNumber.size(); i++){
-                    
-                    dataVals.add(new Entry(Integer.valueOf(allCurrentNumber.get(i).split("/")[1]) -1,allGateway.get(i)));
+
+                    dataVals.add(new Entry(Integer.parseInt(allCurrentNumber.get(i).split("/")[1]) - 1, allGateway.get(i)));
                 }
                 break;
             case "SFRX":
                 for(int i=0; i<allCurrentNumber.size(); i++){
-                    
-                    dataVals.add(new Entry(Integer.valueOf(allCurrentNumber.get(i).split("/")[1]) -1,allSFRX.get(i)));
+
+                    dataVals.add(new Entry(Integer.parseInt(allCurrentNumber.get(i).split("/")[1]) - 1, allSFRX.get(i)));
                 }
                 break;
             case "window":
                 for(int i=0; i<allCurrentNumber.size(); i++){
-                    dataVals.add(new Entry(Integer.valueOf(allCurrentNumber.get(i).split("/")[1]) -1,allWindows.get(i)));
+                    dataVals.add(new Entry(Integer.parseInt(allCurrentNumber.get(i).split("/")[1]) - 1, allWindows.get(i)));
                 }
                 break;
             default:
@@ -1527,10 +1532,24 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         assert getFragmentManager() != null;
         FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ConfigurationDialog configurationDialog=new ConfigurationDialog();
+        ConfigurationDialog configurationDialog = new ConfigurationDialog();
         configurationDialog.show(ft, "Dialog Fragment");
 
 
+    }
+
+    void showResetPopup() {
+
+        assert getFragmentManager() != null;
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ResetFragment resetFragment = new ResetFragment();
+        resetFragment.show(ft, "Dialog Fragment");
+
+        resetFragment.setDialogResult(result -> {
+            if (result.equals("Yes")) {
+                clearEverything();
+            }
+        });
     }
 
     void showDialogSend() {

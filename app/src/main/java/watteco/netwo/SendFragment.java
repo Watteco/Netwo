@@ -93,7 +93,7 @@ public class SendFragment extends DialogFragment {
             }
 
 
-            ArrayAdapter<CharSequence> adapterDEVEUI = new ArrayAdapter(getContext(), R.layout.support_simple_spinner_dropdown_item, arrayListDEVEUI);
+            ArrayAdapter<CharSequence> adapterDEVEUI = new ArrayAdapter(requireContext(), R.layout.support_simple_spinner_dropdown_item, arrayListDEVEUI);
             adapterDEVEUI.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
             spinnerDEVEUI.setAdapter(adapterDEVEUI);
