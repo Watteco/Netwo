@@ -53,7 +53,7 @@ public class ConfigurationDialog extends DialogFragment implements View.OnClickL
         spinnerEUI = v.findViewById(R.id.configEUI);
 
         ArrayList<Integer> arrayEUI = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 1; i < 10; i++) {
             arrayEUI.add(i + 1);
         }
 

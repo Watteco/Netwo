@@ -837,6 +837,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 isResult = true;
             }else if(line.contains("TX") && line.contains("/")){
                 isTxInfo = true;
+                displayTempSimplifiedData();
             }else if(line.startsWith("DEVEUI")){
                 DEVEUI = line.split(":")[1];
                 DEVEUI_value = DEVEUI.substring(10,11);
@@ -844,6 +845,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         }
 
         if((lines.length > 1 && !data.equals("\n")) && !isResult && !isTxInfo) {
+
 
             if(firstTimestamp == 0){
                 firstTimestamp = System.currentTimeMillis()/1000;
@@ -1196,23 +1198,66 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     }
 
+    private void displayTempSimplifiedData() {
 
 
-    private void displaySimplifiedData(boolean isAverage, boolean isTX){
+        simplifiedSNR.setText("SNR \n - dB");
+        simplifiedMargin.setText("Margin \n - dB");
+        simplifiedRSSI.setText("RSSI \n - dBm");
+
+        simplifiedReceptionCheck.setImageResource(R.drawable.wifi_pending);
+        simplifiedReceptionCheck.setScaleX(-1);
+
+        simplifiedEmissionCheck.setImageResource(R.drawable.wifi_pending);
+
+        simplifiedReceptionInfo.setText(" SF-  RX-  -s");
+    }
+
+    private void displaySimplifiedData(boolean isAverage, boolean isTX) {
 
         Resources c = requireContext().getResources();
 
         if(isAverage){
-                String lastAverageGateway = allAverageGateway.get(allAverageGateway.size()-1).equals(-1) ? "/": allAverageGateway.get(allAverageGateway.size()-1).toString();
-                String lastAverageSNR = allAverageSNR.get(allAverageSNR.size()-1).equals(-1) ? "/": allAverageSNR.get(allAverageSNR.size()-1).toString();
-                String lastAverageMargin = allAverageMargin.get(allAverageMargin.size()-1).equals(-1) ? "/": allAverageMargin.get(allAverageMargin.size()-1).toString();
-                String lastAverageRSSI = allAverageRSSI.get(allAverageRSSI.size()-1).equals(-1) ? "/": allAverageRSSI.get(allAverageRSSI.size()-1).toString();
+            String lastAverageGateway = allAverageGateway.get(allAverageGateway.size() - 1).equals(-1) ? "/" : allAverageGateway.get(allAverageGateway.size() - 1).toString();
+            String lastAverageSNR = allAverageSNR.get(allAverageSNR.size() - 1).equals(-1) ? "/" : allAverageSNR.get(allAverageSNR.size() - 1).toString();
+            String lastAverageMargin = allAverageMargin.get(allAverageMargin.size() - 1).equals(-1) ? "/" : allAverageMargin.get(allAverageMargin.size() - 1).toString();
+            String lastAverageRSSI = allAverageRSSI.get(allAverageRSSI.size() - 1).equals(-1) ? "/" : allAverageRSSI.get(allAverageRSSI.size() - 1).toString();
 
-                simplifiedGateway.setText(c.getString(R.string.averageGateway) + lastAverageGateway);
-                simplifiedSNR.setText(c.getString(R.string.average) + " SNR\n" + lastAverageSNR + " dB");
-                simplifiedMargin.setText( c.getString(R.string.average) + " Margin\n" + lastAverageMargin + " dB");
-                simplifiedRSSI.setText(c.getString(R.string.average) + " RSSI\n" + lastAverageRSSI + " dBm");
+            simplifiedGateway.setText(c.getString(R.string.averageGateway) + lastAverageGateway);
+            simplifiedSNR.setText(c.getString(R.string.average) + " SNR\n" + lastAverageSNR + " dB");
+            simplifiedMargin.setText(c.getString(R.string.average) + " Margin\n" + lastAverageMargin + " dB");
+            simplifiedRSSI.setText(c.getString(R.string.average) + " RSSI\n" + lastAverageRSSI + " dBm");
 
+            simplifiedReceptionInfo.setText(" SF" + allSFRX.get(allSFRX.size() - 1) + " RX" + allWindows.get(allWindows.size() - 1) + " " + allDelay.get(allDelay.size() - 1) + "s");
+            simplifiedEmission.setText("SF" + allSFTX.get(allSFTX.size() - 1) + "   " + allTXInfo.get(allTXInfo.size() - 1));
+
+            Integer lastMargin = allMargin.get(allMargin.size() - 1);
+            // Connection indicator of the emmision
+
+            if (lastMargin >= spMarginPerfect) {
+                simplifiedEmissionCheck.setImageResource(R.drawable.wifi_perfect_green);
+            } else if (lastMargin >= spMarginGood) {
+                simplifiedEmissionCheck.setImageResource(R.drawable.wifi_good_light_green);
+            } else if (lastMargin >= spMarginBad) {
+                simplifiedEmissionCheck.setImageResource(R.drawable.wifi_bad_orange);
+            } else {
+                simplifiedEmissionCheck.setImageResource(R.drawable.wifi_terribe_red);
+            }
+
+            Integer lastRSSI = allRSSI.get(allRSSI.size() - 1);
+            Integer lastSNR = allSNR.get(allSNR.size() - 1);
+            // Connection indicator of the reception
+
+            if (lastRSSI >= spRSSIPerfect && lastSNR >= spSNRPerfect) {
+                simplifiedReceptionCheck.setImageResource(R.drawable.wifi_perfect_green);
+            } else if (lastRSSI >= spRSSIPerfect && lastSNR >= spSNRBad || lastSNR >= spSNRPerfect && lastRSSI >= spRSSIBad) {
+                simplifiedReceptionCheck.setImageResource(R.drawable.wifi_good_light_green);
+            } else if (lastRSSI >= spRSSIBad && lastSNR <= spSNRBad || lastRSSI <= spRSSIBad && lastSNR >= spSNRBad || lastRSSI <= spRSSIPerfect && lastRSSI >= spRSSIBad) {
+                simplifiedReceptionCheck.setImageResource(R.drawable.wifi_bad_orange);
+            } else {
+                simplifiedReceptionCheck.setImageResource(R.drawable.wifi_terribe_red);
+            }
+            simplifiedReceptionCheck.setScaleX(-1);
         }
         if(!isAverage & !isTX){
             // We will have to use all the last data we parsed so we create variable to stock and use them more properly
@@ -1297,7 +1342,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         if(isTX && !isAverage){
 
             if(!simplifiedEmission.getText().toString().isEmpty()){
-                simplifiedEmission.setText(simplifiedEmission.getText().toString().split(" ")[0] + "   "+ allTXInfo.get(allTXInfo.size()-1));
+                simplifiedEmission.setText("SF-  " + allTXInfo.get(allTXInfo.size() - 1));
             }else{
                 simplifiedEmission.setText("SF    "+ allTXInfo.get(allTXInfo.size()-1));
             }
@@ -1573,15 +1618,35 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             String spSFValue = tmpSFValue.split(",")[0];
             String spADRValue = sharedPref.getString("ADRValue", "0");
 
+            resetSimplifiedDisplay();
+
             send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
         });
 
 
-        sendFragment.setDEVEUI( result -> {
+        sendFragment.setDEVEUI(result -> {
             DEVEUI = result;
-            DEVEUI_value = DEVEUI.substring(10,11);
+            DEVEUI_value = DEVEUI.substring(10, 11);
             send("MDEVEUI" + DEVEUI_value);
         });
+    }
+
+    private void resetSimplifiedDisplay() {
+
+        simplifiedRSSI.setText("RSSI");
+        simplifiedMargin.setText("Margin");
+        simplifiedSNR.setText("SNR");
+        simplifiedEmission.setText(" SF : ");
+        simplifiedReceptionInfo.setText("");
+        simplifiedGateway.setText("");
+        simplifiedOperator.setText("");
+
+        simplifiedReceptionCheck.setImageResource(R.drawable.wifi_question_mark_flipped);
+        simplifiedReceptionCheck.setScaleX(1);
+        simplifiedEmissionCheck.setImageResource(R.drawable.wifi_question_mark);
+        simplifiedBatteryText.setText("");
+        simplifiedBatteryImage.setImageResource(R.drawable.battery_missing);
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -1589,7 +1654,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         assert getFragmentManager() != null;
         FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ReportFragment reportFragment=new ReportFragment();
+        ReportFragment reportFragment = new ReportFragment();
         reportFragment.show(ft, "Dialog Fragment");
 
         reportFragment.setDialogResult(result -> {
