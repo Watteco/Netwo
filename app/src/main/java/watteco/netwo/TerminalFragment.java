@@ -172,6 +172,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean initialStart = true;
     public Connected connected = Connected.False;
 
+    private boolean isWaitingX = false;
+    private String lastSend = "";
     private String DEVEUI = "Not available";
     private String DEVEUI_value = "";
     int spMarginPerfect, spMarginGood, spMarginBad, spRSSIPerfect, spRSSIBad, spSNRPerfect, spSNRBad, spSpinnerEUI;
@@ -790,27 +792,82 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
      */
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public void collectData(String data){
+    public void collectData(String data) {
         datas.add(data);
-        try{
-            if(data.contains("NOK")) {
-                Toast.makeText(getActivity(), "Not ok", Toast.LENGTH_LONG).show();
-                send("X");
-                SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+        try {
+            if (data.contains("NOK")) {
+                switch (lastSend) {
+                    case "S":
+                        if (!isWaitingX) {
+                            Toast.makeText(getActivity(), "En attente", Toast.LENGTH_LONG).show();
+                            send("X");
+                            isWaitingX = true;
+                            lastSend = "X";
+                        } else {
+                            Handler handler = new Handler();
+                            handler.postDelayed(() -> {
+                                if (connected == Connected.True) {
+                                    // Actions to do after 15 seconds
+                                    SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
 
-                String spNumberValue = sharedPref.getString("NumberValue", "5");
-                String tmpSFValue = sharedPref.getString("SFValue", "12,5");
-                String spSFValue = tmpSFValue.split(",")[0];
-                String spADRValue = sharedPref.getString("ADRValue", "0");
+                                    String spNumberValue = sharedPref.getString("NumberValue", "5");
+                                    String tmpSFValue = sharedPref.getString("SFValue", "12,5");
+                                    String spSFValue = tmpSFValue.split(",")[0];
+                                    String spADRValue = sharedPref.getString("ADRValue", "0");
 
-                send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
-            }else if (data.contains("OK")){
-                Toast.makeText(getActivity(), "Ok", Toast.LENGTH_LONG).show();
+                                    send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
+                                    lastSend = "S";
+                                }
+                            }, 2000);
 
-                if(!allCurrentNumber.isEmpty()){
-                    offset = Integer.valueOf(allCurrentNumber.get(allCurrentNumber.size()-1).split("/")[1]);
+                        }
+                        break;
+                    case "M":
+                        Toast.makeText(getActivity(), "Not ok", Toast.LENGTH_LONG).show();
+                        send("MDEVEUI" + DEVEUI_value);
+                        lastSend = "M";
+                        break;
+                    case "X":
+                        Toast.makeText(getActivity(), "Not ok", Toast.LENGTH_LONG).show();
+                        send("X");
+                        isWaitingX = true;
+                        lastSend = "X";
+                        break;
+                    default:
+                        Toast.makeText(getActivity(), "Not ok", Toast.LENGTH_LONG).show();
+                        break;
                 }
-            }else{
+
+
+            } else if (data.contains("OK")) {
+
+                if (lastSend.equals("S")) isWaitingX = false;
+                if (isWaitingX) {
+                    Handler handler = new Handler();
+                    handler.postDelayed(() -> {
+                        if (connected == Connected.True) {
+                            // Actions to do after 15 seconds
+                            SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+
+                            String spNumberValue = sharedPref.getString("NumberValue", "5");
+                            String tmpSFValue = sharedPref.getString("SFValue", "12,5");
+                            String spSFValue = tmpSFValue.split(",")[0];
+                            String spADRValue = sharedPref.getString("ADRValue", "0");
+
+                            send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
+                            lastSend = "S";
+
+
+                        }
+                    }, 2000);
+
+                } else {
+                    Toast.makeText(getActivity(), "Ok", Toast.LENGTH_LONG).show();
+                    if (!allCurrentNumber.isEmpty()) {
+                        offset = Integer.valueOf(allCurrentNumber.get(allCurrentNumber.size() - 1).split("/")[1]);
+                    }
+                }
+            } else {
                 parseData(data);
             }
 
@@ -819,6 +876,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         }
 
     }
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void parseData(String data) throws JSONException {
@@ -838,9 +896,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }else if(line.contains("TX") && line.contains("/")){
                 isTxInfo = true;
                 displayTempSimplifiedData();
-            }else if(line.startsWith("DEVEUI")){
+            }else if(line.startsWith("DEVEUI")) {
                 DEVEUI = line.split(":")[1];
-                DEVEUI_value = DEVEUI.substring(10,11);
+                DEVEUI_value = DEVEUI.substring(10, 11);
+
+                Toolbar toolbar = requireActivity().findViewById(R.id.toolbar);
+                toolbar.setTitle("WTC-" + DEVEUI.substring(8));
             }
         }
 
@@ -912,8 +973,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 cptLine++;
             }
 
-            offset = Integer.valueOf(allCurrentNumber.get(allCurrentNumber.size()-1).split("/")[1]);
-
+            offset = Integer.valueOf(allCurrentNumber.get(allCurrentNumber.size() - 1).split("/")[1]);
+            Log.i("allCurrentNumber", allCurrentNumber.toString());
             displaySimplifiedData(true, false);
 
         }else if(isTxInfo){
@@ -1406,8 +1467,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         if(allCurrentNumber.isEmpty()){
             graph.getXAxis().setAxisMaximum(2F);
-        }else{
-            graph.getXAxis().setAxisMaximum(graph.getXAxis().getAxisMaximum()+1F);
+        }else {
+            if (graph.getXAxis().getAxisMaximum() < Integer.parseInt(allCurrentNumber.get(allCurrentNumber.size() - 1).split("/")[1])) {
+                graph.getXAxis().setAxisMaximum(1F + Integer.parseInt(allCurrentNumber.get(allCurrentNumber.size() - 1).split("/")[1]));
+            } else {
+                graph.getXAxis().setAxisMaximum(graph.getXAxis().getAxisMaximum() + 1F);
+            }
         }
 
         lineDataSet.setValueTextColor(WHITE);
@@ -1599,36 +1664,43 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     void showDialogSend() {
 
-        Bundle bundle = new Bundle();
+        if (connected == Connected.True) {
 
-        bundle.putString("DEVEUI", DEVEUI);
+            Bundle bundle = new Bundle();
 
-        assert getFragmentManager() != null;
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
+            bundle.putString("DEVEUI", DEVEUI);
 
-        SendFragment sendFragment=new SendFragment();
-        sendFragment.setArguments(bundle);
-        sendFragment.show(ft, "Dialog Fragment");
+            assert getFragmentManager() != null;
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
 
-        sendFragment.setDialogResult(result -> {
-            SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+            SendFragment sendFragment = new SendFragment();
+            sendFragment.setArguments(bundle);
+            sendFragment.show(ft, "Dialog Fragment");
 
-            String spNumberValue = sharedPref.getString("NumberValue", "5");
-            String tmpSFValue = sharedPref.getString("SFValue", "12,5");
-            String spSFValue = tmpSFValue.split(",")[0];
-            String spADRValue = sharedPref.getString("ADRValue", "0");
+            sendFragment.setDialogResult(result -> {
+                SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
 
-            resetSimplifiedDisplay();
+                String spNumberValue = sharedPref.getString("NumberValue", "5");
+                String tmpSFValue = sharedPref.getString("SFValue", "12,5");
+                String spSFValue = tmpSFValue.split(",")[0];
+                String spADRValue = sharedPref.getString("ADRValue", "0");
 
-            send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
-        });
+                resetSimplifiedDisplay();
+
+                send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
+                lastSend = "S";
+            });
 
 
-        sendFragment.setDEVEUI(result -> {
-            DEVEUI = result;
-            DEVEUI_value = DEVEUI.substring(10, 11);
-            send("MDEVEUI" + DEVEUI_value);
-        });
+            sendFragment.setDEVEUI(result -> {
+                DEVEUI = result;
+                DEVEUI_value = DEVEUI.substring(10, 11);
+                send("MDEVEUI" + DEVEUI_value);
+                lastSend = "M";
+            });
+        } else {
+            Toast.makeText(getContext(), R.string.waiting, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void resetSimplifiedDisplay() {

@@ -7,26 +7,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.fragment.app.DialogFragment;
 
-import java.util.ArrayList;
 import java.util.Objects;
 
 public class ConfigurationDialog extends DialogFragment implements View.OnClickListener{
 
     EditText SNRPerfectEditText,SNRBadEditText,MarginPerfectEditText,MarginGoodEditText,MarginBadEditText,RSSIPerfectEditText,RSSIBadEditText;
-    Spinner spinnerEUI;
 
     int MarginPerfect,MarginGood,MarginBad,SNRPerfect,SNRBad,RSSIPerfect,RSSIBad;
     int resetMarginPerfect = 15, resetMarginGood = 10, resetMarginBad = 5, resetSNRPerfect = -5, resetSNRBad = -10, resetRSSIPerfect = -107, resetRSSIBad = -118;
-
-   int defaultSpinnerEUI;
-   int resetDefaultSpinnerEUI = 3;
 
 
     @Override
@@ -47,19 +40,6 @@ public class ConfigurationDialog extends DialogFragment implements View.OnClickL
 
         int spRSSIPerfect = sharedPref.getInt("RSSIPerfect", -107);
         int spRSSIBad = sharedPref.getInt("RSSIBad", -118);
-
-        int spSpinnerEUI = sharedPref.getInt("spinnerEUI", 2) - 1;
-
-        spinnerEUI = v.findViewById(R.id.configEUI);
-
-        ArrayList<Integer> arrayEUI = new ArrayList<>();
-        for (int i = 1; i < 10; i++) {
-            arrayEUI.add(i + 1);
-        }
-
-        ArrayAdapter arrayAdapter = new ArrayAdapter(requireContext(), R.layout.support_simple_spinner_dropdown_item, arrayEUI);
-        spinnerEUI.setAdapter(arrayAdapter);
-        spinnerEUI.setSelection(spSpinnerEUI);
 
         MarginPerfectEditText = v.findViewById(R.id.MarginPerfect);
         MarginPerfectEditText.setText(Integer.toString(spMarginPerfect));
@@ -119,7 +99,6 @@ public class ConfigurationDialog extends DialogFragment implements View.OnClickL
                                 editor.putInt("SNRPerfect", SNRPerfect);
                                 editor.putInt("SNRBad", SNRBad);
 
-                                editor.putInt("spinnerEUI", (Integer) spinnerEUI.getSelectedItem());
                                 editor.apply();
 
                                 ConfigurationDialog.this.dismiss();
@@ -158,7 +137,6 @@ public class ConfigurationDialog extends DialogFragment implements View.OnClickL
                             RSSIPerfectEditText.setText(Integer.toString(resetRSSIPerfect));
                             RSSIBadEditText.setText(Integer.toString(resetRSSIBad));
 
-                            spinnerEUI.setSelection(2);
 
                         }
 

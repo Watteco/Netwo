@@ -77,7 +77,7 @@ public class SendFragment extends DialogFragment {
         String spSFValueIndex = tmpSFValue.split(",")[1];
         String spADRValue = sharedPref.getString("ADRValue", String.valueOf(resetADR));
 
-        int spSpinnerEUI = sharedPref.getInt("spinnerEUI", 2);
+        int spSpinnerEUI = 2;
 
         spinnerDEVEUI = v.findViewById(R.id.sendSpinnerDEVEUI);
 
@@ -88,7 +88,7 @@ public class SendFragment extends DialogFragment {
 
 
             List<String> arrayListDEVEUI = new ArrayList<>();
-            for (int i = 0; i < spSpinnerEUI; i++) {
+            for (int i = 0; i <= spSpinnerEUI; i++) {
                 arrayListDEVEUI.add(DEVEUI.substring(0, 10) + i + DEVEUI.substring(11));
             }
 
