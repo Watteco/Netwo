@@ -30,12 +30,29 @@
             android:layout_weight="1"
             android:text="DEVEUI: "
             android:gravity="right|center"
-            android:singleLine="true"/>
+            android:singleLine="true" />
+
         <Spinner
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:id="@+id/sendSpinnerDEVEUI"
-            android:layout_weight="2.5"/>
+            android:layout_weight="2.5" />
+
+        <ProgressBar
+            android:id="@+id/indeterminateBar"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/checkedProgress"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_check_circle"
+            android:visibility="gone" />
+
     </LinearLayout>
 
     <LinearLayout

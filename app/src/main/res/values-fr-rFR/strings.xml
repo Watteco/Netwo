@@ -63,4 +63,7 @@
     <string name="non">Non</string>
     <string name="resetQuestion">" Voulez-vous réinitialiser toutes les données reçues ?"</string>
     <string name="waiting">En attente de la connexion Bluetooth</string>
+    <string name="connected">Connecté</string>
+    <string name="notConnected">Déconnecté</string>
+    <string name="failedConnection">La connexion a échoué</string>
 </resources>

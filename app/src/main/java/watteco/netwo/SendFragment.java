@@ -3,6 +3,7 @@ package watteco.netwo;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,8 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -36,6 +39,8 @@ public class SendFragment extends DialogFragment {
     CheckBox checkBoxADR;
     EditText editNumber;
     Spinner spinnerSF, spinnerDEVEUI;
+    ProgressBar progressBar;
+    ImageView checked;
     OnMyDialogResult mDialogResult;
     OnMyDialogUpdate mDialogUpdateAPP;
     OnMyDialogUpdate mDialogUpdateDEV;
@@ -81,6 +86,10 @@ public class SendFragment extends DialogFragment {
 
         spinnerDEVEUI = v.findViewById(R.id.sendSpinnerDEVEUI);
 
+        progressBar = v.findViewById(R.id.indeterminateBar);
+
+        checked = v.findViewById(R.id.checkedProgress);
+
 
         if (DEVEUI.equals("Not available")) {
             spinnerDEVEUI.setEnabled(false);
@@ -107,6 +116,37 @@ public class SendFragment extends DialogFragment {
                 if (mDialogUpdateDEV != null && !initSpinnerDEV) {
                     mDialogUpdateDEV.update(spinnerDEVEUI.getSelectedItem().toString());
                     terminalFragment.setConnection(TerminalFragment.Connected.False);
+
+                    progressBar.setVisibility(View.VISIBLE);
+                    v.findViewById(R.id.sendParameters).setClickable(false);
+                    spinnerDEVEUI.setEnabled(false);
+                    final Handler handler = new Handler();
+                    final int delay = 1000; // 1000 milliseconds == 1 second
+
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if ((terminalFragment.getConnection() != TerminalFragment.Connected.True || terminalFragment.getConnection().equals(TerminalFragment.Connected.Pending)) && !terminalFragment.DEVEUI.equals(spinnerDEVEUI.getSelectedItem().toString())) {
+                                handler.postDelayed(this, delay);
+                            } else {
+                                progressBar.setVisibility(View.GONE);
+                                checked.setVisibility(View.VISIBLE);
+                                handler.postDelayed(() -> {
+                                    checked.setVisibility(View.GONE);
+                                    v.findViewById(R.id.sendParameters).setClickable(true);
+                                    spinnerDEVEUI.setEnabled(true);
+                                }, 3000);
+                            }
+                        }
+                    }, delay);
+
+                    handler.postDelayed(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        checked.setVisibility(View.GONE);
+                        v.findViewById(R.id.sendParameters).setClickable(true);
+                        spinnerDEVEUI.setEnabled(true);
+                    }, 20000);
+
                 }
                 initSpinnerDEV = false;
             }

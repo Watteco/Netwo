@@ -62,5 +62,8 @@
     <string name="non">No</string>
     <string name="resetQuestion"> Do you want to reset every data received yet ?</string>
     <string name="waiting">"Waiting for BLE connection to establish"</string>
+    <string name="connected"> Connected </string>
+    <string name="notConnected"> Not connected </string>
+    <string name="failedConnection"> Connection failed </string>
 </resources>
 

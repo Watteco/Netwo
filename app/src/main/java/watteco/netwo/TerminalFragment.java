@@ -174,8 +174,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private boolean isWaitingX = false;
     private String lastSend = "";
-    private String DEVEUI = "Not available";
-    private String DEVEUI_value = "";
+    public String DEVEUI = "Not available";
+    public String DEVEUI_value = "";
     int spMarginPerfect, spMarginGood, spMarginBad, spRSSIPerfect, spRSSIBad, spSNRPerfect, spSNRBad, spSpinnerEUI;
     SerialSocket socket;
     FusedLocationProviderClient mFusedLocationClient;
@@ -543,7 +543,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private boolean clearEverything() {
-        receiveText.setText("~" + R.string.clear + "~\n");
+        receiveText.setText("~" + requireContext().getResources().getString(R.string.clear) + "~\n");
         percentageReceivedDataTX.setText("");
         percentageReceivedDataRX.setText("");
         simplifiedRSSI.setText("RSSI");
@@ -708,7 +708,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private void send(String str) {
         if(connected != Connected.True) {
-            Toast.makeText(getActivity(), "not connected", Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), requireContext().getResources().getString(R.string.notConnected), Toast.LENGTH_LONG).show();
             return;
         }
         try {
@@ -744,8 +744,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onSerialConnect() {
         status("connected");
-        Toast.makeText(getActivity(), "Connected", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), requireContext().getResources().getString(R.string.connected), Toast.LENGTH_SHORT).show();
         connected = Connected.True;
+
+        Handler handler = new Handler();
+        handler.postDelayed(() -> {
+            if (DEVEUI.equals("Not available")) {
+                send("MDEVEUI?");
+            }
+        }, 5000);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -753,7 +760,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public void onSerialConnectError(Exception e) {
         try{
             status("connection failed: " + e.getMessage());
-            Toast.makeText(getActivity(), "Not connected: "+  e.getMessage(), Toast.LENGTH_LONG).show();
             disconnect();
 
             Handler handler = new Handler();
@@ -780,7 +786,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onSerialIoError(Exception e) {
         status("connection lost: " + e.getMessage());
-        Toast.makeText(getActivity(), "Connection lost: "+  e.getMessage(), Toast.LENGTH_LONG).show();
         disconnect();
         Handler handler = new Handler();
         handler.postDelayed(this::connect, 5000);
@@ -1693,8 +1698,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
 
             sendFragment.setDEVEUI(result -> {
-                DEVEUI = result;
-                DEVEUI_value = DEVEUI.substring(10, 11);
+                DEVEUI_value = result.substring(10, 11);
                 send("MDEVEUI" + DEVEUI_value);
                 lastSend = "M";
             });
@@ -1716,8 +1720,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         simplifiedReceptionCheck.setImageResource(R.drawable.wifi_question_mark_flipped);
         simplifiedReceptionCheck.setScaleX(1);
         simplifiedEmissionCheck.setImageResource(R.drawable.wifi_question_mark);
-        simplifiedBatteryText.setText("");
-        simplifiedBatteryImage.setImageResource(R.drawable.battery_missing);
 
     }
 
