@@ -219,8 +219,6 @@ public class SendFragment extends DialogFragment {
 
                         editNumber.setText(Integer.toString(resetNbFrame));
 
-                        spinnerDEVEUI.setSelection(0);
-
                         spinnerSF.setSelection(Integer.parseInt(resetSF.split(",")[1]), true);
 
                         checkBoxADR.setChecked(resetADR != 0);

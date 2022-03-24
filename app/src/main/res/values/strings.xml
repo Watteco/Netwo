@@ -10,7 +10,7 @@
     <string name="pairing_request">PAIRING requested-> Perform pairing steps. Connect again</string>
     <string name="emission"><u>Emission:</u></string>
     <string name="reception"><u>Reception:</u></string>
-    <string name="aboutText">This app has been developed by Olivier STEPHAN for Watteco. All right reserved V0.99</string>
+    <string name="aboutText">This app has been developed by Olivier STEPHAN for Watteco. All right reserved V1.01</string>
     <string name="received">You received </string>
     <string name="percentage">% of the data.</string>
     <string name="descriptionMargin">Margin in dB between the received signal level and the minimum reception level.</string>
@@ -62,8 +62,9 @@
     <string name="non">No</string>
     <string name="resetQuestion"> Do you want to reset every data received yet ?</string>
     <string name="waiting">"Waiting for BLE connection to establish"</string>
-    <string name="connected"> Connected </string>
-    <string name="notConnected"> Not connected </string>
-    <string name="failedConnection"> Connection failed </string>
+    <string name="connected"> BLE: Connected </string>
+    <string name="connecting"> BLE: Connecting </string>
+    <string name="notConnected"> BLE: Not connected </string>
+    <string name="failedConnection"> BLE: Connection failed </string>
 </resources>
 

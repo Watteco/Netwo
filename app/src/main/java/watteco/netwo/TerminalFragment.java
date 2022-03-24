@@ -432,6 +432,19 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             sendText.setText("");
         });
 
+        View shareBtn = view.findViewById(R.id.share_btn);
+        shareBtn.setOnClickListener(v -> {
+            InputMethodManager mgr = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            mgr.hideSoftInputFromWindow(sendText.getWindowToken(), 0);
+
+            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+            String shareBody = receiveText.getText().toString();
+            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Debug logs");
+            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+            startActivity(Intent.createChooser(sharingIntent, "Share via"));
+        });
+
         swipeRefreshLayout = requireActivity().findViewById(R.id.swipe);
         swipeRefreshLayout.setEnabled(false);
         swipeRefreshLayout.setRefreshing(false);
@@ -459,8 +472,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 linearLayoutGraphRX.setLayoutParams(new LinearLayout.LayoutParams(0, 0, 0));
                 linearSimplified.setLayoutParams(new LinearLayout.LayoutParams(0, 0, 0));
                 viewBeforeSendText.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, (float) 0.01));
-                linearSendText.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, (float) 0.5));
-                receiveText.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, (float) 9.49));
+                linearSendText.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, (float) 0.6));
+                receiveText.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, (float) 9.39));
 
             } else {
             }
@@ -694,6 +707,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             BluetoothDevice device = bluetoothAdapter.getRemoteDevice(deviceAddress);
             status("connecting...");
             connected = Connected.Pending;
+            Toast.makeText(getActivity(), requireContext().getResources().getString(R.string.connecting), Toast.LENGTH_LONG).show();
+
             socket = new SerialSocket(getActivity().getApplicationContext(), device);
             service.connect(socket);
         } catch (Exception e) {
@@ -786,6 +801,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onSerialIoError(Exception e) {
         status("connection lost: " + e.getMessage());
+        Toast.makeText(getActivity(), requireContext().getResources().getString(R.string.notConnected), Toast.LENGTH_LONG).show();
         disconnect();
         Handler handler = new Handler();
         handler.postDelayed(this::connect, 5000);
@@ -851,7 +867,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     Handler handler = new Handler();
                     handler.postDelayed(() -> {
                         if (connected == Connected.True) {
-                            // Actions to do after 15 seconds
+                            // Actions to do after 2 seconds
                             SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
 
                             String spNumberValue = sharedPref.getString("NumberValue", "5");
@@ -861,8 +877,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
                             send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
                             lastSend = "S";
-
-
+                        } else {
+                            isWaitingX = false;
                         }
                     }, 2000);
 
@@ -1234,7 +1250,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
                 fileName = "report_" + deviceName + "_" + date +".csv";
             }else{
-                fileName = name + ".json";
+                fileName = name + ".csv";
             }
 
             File file = new File(requireContext().getCacheDir(), fileName);

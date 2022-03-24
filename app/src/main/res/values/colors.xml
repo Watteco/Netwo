@@ -13,7 +13,9 @@
     <color name="colorPerfect">#00d700</color>
     <color name="colorExcellent">#ffff00</color>
     <color name="colorGood">#ffa500</color>
-    <color name="colorBad">	#ff0000</color>
+    <color name="colorBad">#ff0000</color>
 
-    <color name="darkOrange"> #513108</color>
+    <color name="darkOrange">#513108</color>
+
+    <color name="grey">#505050</color>
 </resources>
