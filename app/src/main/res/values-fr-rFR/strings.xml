@@ -8,7 +8,7 @@
     <string name="descriptionMargin">Marge en dB entre le niveau de signal recu et le niveau de reception minimum.</string>
     <string name="descriptionRSSI">"La RSSI est la puissance du signal reçu en dBm. "</string>
     <string name="descriptionSNR">" Le SNR est le rapport entre le signal de puissance reçu et le niveau de puissance du bruit."</string>
-    <string name="aboutText">" Cette application a été développée par Olivier STEPHAN pour Watteco. Tous droits réservés V1.01"</string>
+    <string name="aboutText">" Cette application a été développée par Olivier STEPHAN pour Watteco. Tous droits réservés V1.04"</string>
     <string name="descriptionGateway">" Il s'agit du nombre de passerelle avec laquelle le produit communique."</string>
     <string name="error">" Il y a une erreur. Veuillez nous contacter pour la résoudre."</string>
     <string name="descriptionSF">" Spreading Factor (SF): Débit d'émision varie de SF7 à SF12."</string>

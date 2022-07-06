@@ -8,8 +8,8 @@ android {
         vectorDrawables.useSupportLibrary true
 
         applicationId "watteco.netwo"
-        versionCode 16
-        versionName "1.01"
+        versionCode 19
+        versionName "1.04"
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

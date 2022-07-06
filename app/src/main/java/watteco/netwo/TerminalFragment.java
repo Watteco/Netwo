@@ -329,7 +329,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         graphRSSI.getXAxis().setAxisMaximum(2);
         graphMargin.getXAxis().setAxisMaximum(2);
         graphSFRX.getXAxis().setAxisMaximum(2);
-        graphSFTX.getXAxis().setAxisMaximum(2);
+        graphSFTX.getXAxis().setAxisMaximum(3);
         graphGateway.getXAxis().setAxisMaximum(2);
 
 
@@ -508,7 +508,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
                 drawGraph("Margin", 0f, 55f, graphMargin);
                 drawGraph("SFTX", 6f, 13f, graphSFTX);
-                drawGraph("Nb gateway", 0f, 10f, graphGateway);
+                drawGraph("Nb gateway", 0f, graphGateway.getAxisLeft().getAxisMaximum() == 10f ? 10f : graphGateway.getAxisLeft().getAxisMaximum(), graphGateway);
             } else {
             }
             return true;
@@ -866,6 +866,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 if (isWaitingX) {
                     Handler handler = new Handler();
                     handler.postDelayed(() -> {
+
                         if (connected == Connected.True) {
                             // Actions to do after 2 seconds
                             SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
@@ -961,17 +962,20 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
             if(!currentNumberOfData.equals(allCurrentNumber.size())){
                 Calendar cal = Calendar.getInstance(Locale.ENGLISH);
-                cal.setTimeInMillis(System.currentTimeMillis()/1000 * 1000L);
+                cal.setTimeInMillis(System.currentTimeMillis() / 1000 * 1000L);
                 String date = DateFormat.format("dd-MM-yyyy hh:mm:ss", cal).toString();
 
                 putReportData(date);
 
                 addData("SNR", graphSNR);
                 addData("RSSI", graphRSSI);
-                addData("Margin",graphMargin);
-                addData("SFTX",graphSFTX);
-                addData("Nb gateway",graphGateway);
-                addData("SFRX",graphSFRX);
+                addData("Margin", graphMargin);
+                addData("SFTX", graphSFTX);
+                addData("Nb gateway", graphGateway);
+
+                checkXMaximum(graphGateway, allGateway);
+
+                addData("SFRX", graphSFRX);
 
                 displayPercentageOfDataReceived();
                 displaySimplifiedData(false, false);
@@ -1000,14 +1004,22 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         }else if(isTxInfo){
             for(String line: lines){
-                if(line.contains("TX")){
+                if (line.contains("TX")) {
                     lastTXInfo = line;
                     allTXInfo.add(line);
 
-                     displaySimplifiedData(false, true);
+                    displaySimplifiedData(false, true);
                 }
             }
         }
+    }
+
+    private void checkXMaximum(LineChart graph, List<Integer> datas) {
+        Float currentAxisMaximum = graph.getAxisLeft().getAxisMaximum();
+        Integer lastData = datas.get(datas.size() - 1);
+
+        if (currentAxisMaximum <= lastData)
+            graph.getAxisLeft().setAxisMaximum(10 + (lastData / 10) * 10);
     }
 
     @SuppressLint("MissingPermission")
@@ -1144,7 +1156,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         Integer lastWindows = allWindows.get(allWindows.size() - 1);
         Integer lastDelay = allDelay.get(allDelay.size() - 1);
 
-        String lastOperatorName = allOperatorName.contains(lastOperator) ? Objects.requireNonNull(allOperatorName.get(lastOperator)).toString().toUpperCase() : "Unknown";
+        String lastOperatorName = allOperatorName.containsKey(lastOperator) ? Objects.requireNonNull(allOperatorName.get(lastOperator)).toString().toUpperCase() : "Unknown";
 
         temp.put("Gateway", lastGateway);
         temp.put("Margin", lastMargin);
