@@ -1,12 +1,10 @@
 package watteco.netwo;
 
-import static android.content.Context.LOCATION_SERVICE;
 import static android.graphics.Color.GREEN;
 import static android.graphics.Color.RED;
 import static android.graphics.Color.WHITE;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -15,7 +13,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -23,14 +20,13 @@ import android.graphics.Paint;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
-import android.provider.Settings;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.format.DateFormat;
@@ -49,11 +45,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.DialogFragment;
@@ -68,12 +65,7 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -90,17 +82,36 @@ import java.util.Locale;
 import java.util.Objects;
 
 
+@RequiresApi(api = Build.VERSION_CODES.N)
+public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener, LocationListener {
 
-
-
-public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
-
+    private static final int REQUEST_LOCATION = 1;
     //Variable par defaut configurable
     int MarginPerfect = 15, MarginGood = 10, MarginBad = 5, SNRPerfect = -5, SNRBad = -10, RSSIPerfect = -107, RSSIBad = -118;
+
     private final List<String> allTXInfo = new ArrayList<>();
     private static final String TAG = "TerminalFragment";
+    ActivityResultLauncher<String[]> locationPermissionRequest =
+            registerForActivityResult(new ActivityResultContracts
+                            .RequestMultiplePermissions(), result -> {
+                        Boolean fineLocationGranted = result.getOrDefault(
+                                Manifest.permission.ACCESS_FINE_LOCATION, false);
+                        Boolean coarseLocationGranted = result.getOrDefault(
+                                Manifest.permission.ACCESS_COARSE_LOCATION, false);
+                        if (fineLocationGranted != null && fineLocationGranted) {
+                            // Precise location access granted.
+                        } else if (coarseLocationGranted != null && coarseLocationGranted) {
+                            // Only approximate location access granted.
+                        } else {
+                            // No location access granted.
+                        }
+                    }
+            );
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationManager locationManager;
 
     enum Connected {False, Pending, True}
+
     private String deviceAddress;
     private String deviceName;
 
@@ -178,10 +189,30 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public String DEVEUI_value = "";
     int spMarginPerfect, spMarginGood, spMarginBad, spRSSIPerfect, spRSSIBad, spSNRPerfect, spSNRBad, spSpinnerEUI;
     SerialSocket socket;
-    FusedLocationProviderClient mFusedLocationClient;
-    Location gLocation;
+
+    @Override
+    public void onLocationChanged(@NonNull Location location) {
+        receiveText.append("Longitude : " + location.getLongitude() + " latitude : " + location.getLatitude() + "\n");
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Toast.makeText(getContext(), "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show();
+    }
 
     SwipeRefreshLayout swipeRefreshLayout;
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        Toast.makeText(getContext(), "Thx", Toast.LENGTH_SHORT).show();
+
+        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+        try {
+            locationManager.requestLocationUpdates(provider, 5000, 5, this);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
+    }
 
     /*
      * Lifecycle
@@ -196,20 +227,21 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         deviceAddress = getArguments().getString("device");
         deviceName = getArguments().getString("deviceName");
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
 
-        getLastLocation();
+        locationPermissionRequest.launch(new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.INTERNET
+        });
 
-    }
+        LocationRequest.create();
 
-
-    @Override
-    public void onDestroy() {
-
-        disconnect();
-        requireActivity().stopService(new Intent(getActivity(), SerialService.class));
-        super.onDestroy();
-
+        try {
+            locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, this);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
     }
 
     public void onDestroyView() {
@@ -218,6 +250,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         service.detach();
         super.onDestroyView();
     }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -280,7 +313,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     /*
      * UI
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -457,6 +490,80 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         inflater.inflate(R.menu.menu_terminal, menu);
     }
 
+    @Override
+    public void onDestroy() {
+
+        disconnect();
+        requireActivity().stopService(new Intent(getActivity(), SerialService.class));
+        locationManager.removeUpdates(this);
+        super.onDestroy();
+
+    }
+
+    private boolean clearEverything() {
+        receiveText.setText("~" + requireContext().getResources().getString(R.string.clear) + "~\n");
+        percentageReceivedDataTX.setText("");
+        percentageReceivedDataRX.setText("");
+        simplifiedRSSI.setText("RSSI");
+        simplifiedMargin.setText("Margin");
+        simplifiedSNR.setText("SNR");
+        simplifiedEmission.setText(" SF : ");
+        simplifiedReceptionInfo.setText("");
+        simplifiedGateway.setText("");
+        simplifiedOperator.setText("");
+
+        simplifiedReceptionCheck.setImageResource(R.drawable.wifi_question_mark_flipped);
+        simplifiedReceptionCheck.setScaleX(1);
+        simplifiedEmissionCheck.setImageResource(R.drawable.wifi_question_mark);
+        simplifiedBatteryText.setText("");
+        simplifiedBatteryImage.setImageResource(R.drawable.battery_missing);
+
+
+        datas = new ArrayList<>();
+        reportData = new JSONArray();
+        reportDataCount = 0;
+        allCurrentNumber = new ArrayList<>();
+        allNumber = new ArrayList<>();
+        allGateway = new ArrayList<>();
+        allMargin = new ArrayList<>();
+        allSNR = new ArrayList<>();
+        allRSSI = new ArrayList<>();
+        allSFTX = new ArrayList<>();
+        allSFRX = new ArrayList<>();
+        allWindows = new ArrayList<>();
+        allDelay = new ArrayList<>();
+        allOperator = new ArrayList<>();
+        allBatteryVoltage = new ArrayList<>();
+
+        allAverageGateway = new ArrayList<>();
+        allAverageMargin = new ArrayList<>();
+        allAverageRSSI = new ArrayList<>();
+        allAverageSNR = new ArrayList<>();
+
+        graphSNR.getXAxis().setAxisMaximum(2);
+        graphSNR.getXAxis().setAxisMaximum(2);
+        graphRSSI.getXAxis().setAxisMaximum(2);
+        graphMargin.getXAxis().setAxisMaximum(2);
+        graphSFRX.getXAxis().setAxisMaximum(2);
+        graphSFTX.getXAxis().setAxisMaximum(2);
+        graphGateway.getXAxis().setAxisMaximum(2);
+
+        offset = 0;
+
+        addData("SNR", graphSNR);
+        addData("RSSI", graphRSSI);
+        addData("Margin", graphMargin);
+        addData("SFTX", graphSFTX);
+        addData("Nb gateway", graphGateway);
+        addData("SFRX", graphSFRX);
+
+        drawGradient(graphSNR);
+        drawGradient(graphRSSI);
+        drawGradient(graphMargin);
+
+        return true;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -540,11 +647,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         } else if (id == R.id.back) {
             requireActivity().getSupportFragmentManager().popBackStack();
             return true;
-        } else if (id == R.id.supportRedirect2){
+        } else if (id == R.id.supportRedirect2) {
             redirectOnSupport();
             return true;
-        }
-        else if (id == R.id.envoi) {
+        } else if (id == R.id.envoi) {
             showDialogReport();
             return true;
         } else if (id == R.id.sendLogs) {
@@ -553,70 +659,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         } else {
             return super.onOptionsItemSelected(item);
         }
-    }
-
-    private boolean clearEverything() {
-        receiveText.setText("~" + requireContext().getResources().getString(R.string.clear) + "~\n");
-        percentageReceivedDataTX.setText("");
-        percentageReceivedDataRX.setText("");
-        simplifiedRSSI.setText("RSSI");
-        simplifiedMargin.setText("Margin");
-        simplifiedSNR.setText("SNR");
-        simplifiedEmission.setText(" SF : ");
-        simplifiedReceptionInfo.setText("");
-        simplifiedGateway.setText("");
-        simplifiedOperator.setText("");
-
-        simplifiedReceptionCheck.setImageResource(R.drawable.wifi_question_mark_flipped);
-        simplifiedReceptionCheck.setScaleX(1);
-        simplifiedEmissionCheck.setImageResource(R.drawable.wifi_question_mark);
-        simplifiedBatteryText.setText("");
-        simplifiedBatteryImage.setImageResource(R.drawable.battery_missing);
-
-
-        datas = new ArrayList<>();
-        reportData = new JSONArray();
-        reportDataCount = 0;
-        allCurrentNumber = new ArrayList<>();
-        allNumber = new ArrayList<>();
-        allGateway = new ArrayList<>();
-        allMargin = new ArrayList<>();
-        allSNR = new ArrayList<>();
-        allRSSI = new ArrayList<>();
-        allSFTX = new ArrayList<>();
-        allSFRX = new ArrayList<>();
-        allWindows = new ArrayList<>();
-        allDelay = new ArrayList<>();
-        allOperator = new ArrayList<>();
-        allBatteryVoltage = new ArrayList<>();
-
-        allAverageGateway = new ArrayList<>();
-        allAverageMargin = new ArrayList<>();
-        allAverageRSSI = new ArrayList<>();
-        allAverageSNR = new ArrayList<>();
-
-        graphSNR.getXAxis().setAxisMaximum(2);
-        graphSNR.getXAxis().setAxisMaximum(2);
-        graphRSSI.getXAxis().setAxisMaximum(2);
-        graphMargin.getXAxis().setAxisMaximum(2);
-        graphSFRX.getXAxis().setAxisMaximum(2);
-        graphSFTX.getXAxis().setAxisMaximum(2);
-        graphGateway.getXAxis().setAxisMaximum(2);
-
-        offset = 0;
-
-        addData("SNR", graphSNR);
-        addData("RSSI", graphRSSI);
-        addData("Margin", graphMargin);
-        addData("SFTX", graphSFTX);
-        addData("Nb gateway", graphGateway);
-        addData("SFRX", graphSFRX);
-
-        drawGradient(graphSNR);
-        drawGradient(graphRSSI);
-        drawGradient(graphMargin);
-
-        return true;
     }
 
     private void showLogsReport() {
@@ -630,8 +672,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         for (String log : socket.logs) {
             logsString += log + "\n";
         }
-        
-        bundle.putString("Logs",logsString);
+
+        bundle.putString("Logs", logsString);
 
         logsFragment.setArguments(bundle);
 
@@ -651,28 +693,27 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private void sendLogs() {
         String fileName;
-        long tsLong = System.currentTimeMillis()/1000;
+        long tsLong = System.currentTimeMillis() / 1000;
         Calendar cal = Calendar.getInstance(Locale.ENGLISH);
         cal.setTimeInMillis(tsLong * 1000L);
         String date = DateFormat.format("dd-MM-yyyy hh:mm:ss", cal).toString();
 
-        fileName = "reportLogs_" + deviceName + "_" + date +".txt";
-
+        fileName = "reportLogs_" + deviceName + "_" + date + ".txt";
 
 
         File file = new File(requireContext().getCacheDir(), fileName);
-        try{
+        try {
             FileWriter writer = new FileWriter(file);
 
             String logsString = "";
-            for(String log : socket.logs){
+            for (String log : socket.logs) {
                 logsString += log + "\n";
             }
 
             writer.append(logsString);
             writer.flush();
             writer.close();
-        }catch (Exception e){
+        } catch (Exception e) {
             Toast.makeText(getContext(), "File writing failed: " + e.toString(), Toast.LENGTH_LONG).show();
         }
 
@@ -722,12 +763,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void send(String str) {
-        if(connected != Connected.True) {
+        if (connected != Connected.True) {
             Toast.makeText(getActivity(), requireContext().getResources().getString(R.string.notConnected), Toast.LENGTH_LONG).show();
             return;
         }
         try {
-            SpannableStringBuilder spn = new SpannableStringBuilder(str+'\n');
+            SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
             spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             receiveText.append(spn);
             byte[] data = (str + "\r\n").getBytes();
@@ -744,11 +785,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void status(String str) {
-        try{
-            SpannableStringBuilder spn = new SpannableStringBuilder(str+'\n');
+        try {
+            SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
             spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             receiveText.append(spn);
-        }catch(Exception e){
+        } catch (Exception e) {
         }
 
     }
@@ -773,22 +814,22 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onSerialConnectError(Exception e) {
-        try{
+        try {
             status("connection failed: " + e.getMessage());
             disconnect();
 
             Handler handler = new Handler();
             handler.postDelayed(this::connect, 5000);
-        }catch(Exception err){
+        } catch (Exception err) {
         }
 
     }
 
-    public Connected getConnection(){
+    public Connected getConnection() {
         return connected;
     }
 
-    public void setConnection(Connected c){
+    public void setConnection(Connected c) {
         connected = c;
     }
 
@@ -893,7 +934,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 parseData(data);
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("Error", e.toString());
         }
 
@@ -903,7 +944,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void parseData(String data) throws JSONException {
 
-        if(data.startsWith(Objects.requireNonNull(System.getProperty("line.separator")))){
+        if (data.startsWith(Objects.requireNonNull(System.getProperty("line.separator")))) {
             data = data.substring(1);
         }
         String[] lines = data.split(Objects.requireNonNull(System.getProperty("line.separator")));
@@ -912,13 +953,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         boolean isResult = false;
         boolean isTxInfo = false;
 
-        for(String line: lines){
+        for (String line : lines) {
             if (line.contains("RESULT")) {
                 isResult = true;
-            }else if(line.contains("TX") && line.contains("/")){
+            } else if (line.contains("TX") && line.contains("/")) {
                 isTxInfo = true;
                 displayTempSimplifiedData();
-            }else if(line.startsWith("DEVEUI")) {
+            } else if (line.startsWith("DEVEUI")) {
                 DEVEUI = line.split(":")[1];
                 DEVEUI_value = DEVEUI.substring(10, 11);
 
@@ -927,40 +968,50 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
         }
 
-        if((lines.length > 1 && !data.equals("\n")) && !isResult && !isTxInfo) {
+        if ((lines.length > 1 && !data.equals("\n")) && !isResult && !isTxInfo) {
 
 
-            if(firstTimestamp == 0){
-                firstTimestamp = System.currentTimeMillis()/1000;
+            if (firstTimestamp == 0) {
+                firstTimestamp = System.currentTimeMillis() / 1000;
             }
-            long currentTimeStamp = System.currentTimeMillis()/1000 - firstTimestamp;
+            long currentTimeStamp = System.currentTimeMillis() / 1000 - firstTimestamp;
 
-            int x = Math.round(currentTimeStamp/15);
+            int x = Math.round(currentTimeStamp / 15);
             Integer currentNumberOfData = allCurrentNumber.size();
 
             // On itère sur toutes les lignes, et on vérifie si la ligne contient ce qu'on a besoin d'afficher
             int cptLine = 0;
-            for(String line: lines){
-                if(line.contains("/")){
-                    Integer tmpValue = Integer.valueOf(lines[cptLine].split("/")[1]) + offset ;
-                    String tmpString = lines[cptLine].split("/")[0] + "/"+ tmpValue;
+            for (String line : lines) {
+                if (line.contains("/")) {
+                    Integer tmpValue = Integer.valueOf(lines[cptLine].split("/")[1]) + offset;
+                    String tmpString = lines[cptLine].split("/")[0] + "/" + tmpValue;
                     allCurrentNumber.add(tmpString);
                     allNumber.add(lines[cptLine]);
                 }
-                if(line.contains("Gateway")) allGateway.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("TX Margin")) allMargin.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("TX SF")) allSFTX.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("RX SNR")) allSNR.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("RX RSSI")) allRSSI.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("RX Window")) allWindows.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("RX SF")) allSFRX.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("RX Delay")) allDelay.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("Battery")) allBatteryVoltage.add((float) ((Integer.parseInt(lines[cptLine].split(":")[1].trim()) /100))/10);
-                if(line.contains("NetId"))  allOperator.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("Gateway"))
+                    allGateway.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("TX Margin"))
+                    allMargin.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("TX SF"))
+                    allSFTX.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("RX SNR"))
+                    allSNR.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("RX RSSI"))
+                    allRSSI.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("RX Window"))
+                    allWindows.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("RX SF"))
+                    allSFRX.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("RX Delay"))
+                    allDelay.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("Battery"))
+                    allBatteryVoltage.add((float) ((Integer.parseInt(lines[cptLine].split(":")[1].trim()) / 100)) / 10);
+                if (line.contains("NetId"))
+                    allOperator.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
                 cptLine++;
             }
 
-            if(!currentNumberOfData.equals(allCurrentNumber.size())){
+            if (!currentNumberOfData.equals(allCurrentNumber.size())) {
                 Calendar cal = Calendar.getInstance(Locale.ENGLISH);
                 cal.setTimeInMillis(System.currentTimeMillis() / 1000 * 1000L);
                 String date = DateFormat.format("dd-MM-yyyy hh:mm:ss", cal).toString();
@@ -987,14 +1038,18 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
 
 
-        }else if (isResult && (!data.equals("\n") || !data.equals(""))){
+        } else if (isResult && (!data.equals("\n") || !data.equals(""))) {
 
             int cptLine = 0;
-            for(String line: lines){
-                if(line.contains("GATEWAY")) allAverageGateway.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("MARGIN")) allAverageMargin.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("SNR")) allAverageSNR.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
-                if(line.contains("RSSI")) allAverageRSSI.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+            for (String line : lines) {
+                if (line.contains("GATEWAY"))
+                    allAverageGateway.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("MARGIN"))
+                    allAverageMargin.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("SNR"))
+                    allAverageSNR.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                if (line.contains("RSSI"))
+                    allAverageRSSI.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
                 cptLine++;
             }
 
@@ -1002,8 +1057,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             Log.i("allCurrentNumber", allCurrentNumber.toString());
             displaySimplifiedData(true, false);
 
-        }else if(isTxInfo){
-            for(String line: lines){
+        } else if (isTxInfo) {
+            for (String line : lines) {
                 if (line.contains("TX")) {
                     lastTXInfo = line;
                     allTXInfo.add(line);
@@ -1022,129 +1077,30 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             graph.getAxisLeft().setAxisMaximum(10 + (lastData / 10) * 10);
     }
 
-    @SuppressLint("MissingPermission")
-    private void requestNewLocationData() {
-
-        // Initializing LocationRequest
-        // object with appropriate methods
-        LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(5);
-        mLocationRequest.setFastestInterval(0);
-        mLocationRequest.setNumUpdates(1);
-
-        // setting LocationRequest
-        // on FusedLocationClient
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
-        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-    }
-
-    @SuppressLint("MissingPermission")
-    private void getLastLocation() {
-        // check if permissions are given
-        if (checkPermissions()) {
-
-            // check if location is enabled
-            if (isLocationEnabled()) {
-
-                // getting last
-                // location from
-                // FusedLocationClient
-                // object
-                mFusedLocationClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Location> task) {
-                        Location location = task.getResult();
-                        if (location == null) {
-                            requestNewLocationData();
-                        } else {
-                            gLocation = location;
-                        }
-                    }
-                });
-            } else {
-                Toast.makeText(getContext(), "Please turn on" + " your location...", Toast.LENGTH_LONG).show();
-                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivity(intent);
-            }
-        } else {
-            // if permissions aren't available,
-            // request for permissions
-            requestPermissions();
-        }
-    }
-
-    // method to check for permissions
-    private boolean checkPermissions() {
-        return ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-
-        // If we want background location
-        // on Android 10.0 and higher,
-        // use:
-        // ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
-    }
-
-    // method to request for permissions
-    private void requestPermissions() {
-        ActivityCompat.requestPermissions(requireActivity(), new String[]{
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION}, 44);
-    }
-
-    private final LocationCallback mLocationCallback = new LocationCallback() {
-
-        @Override
-        public void onLocationResult(LocationResult locationResult) {
-            gLocation = locationResult.getLastLocation();
-        }
-    };
-
-    // method to check
-    // if location is enabled
-    private boolean isLocationEnabled() {
-        LocationManager locationManager = (LocationManager) requireContext().getSystemService(LOCATION_SERVICE);
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-    }
-
-    // If everything is alright then
-    @Override
-    public void
-    onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == 44) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLastLocation();
-            }
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private void putReportData(String date) throws JSONException {
 
         JSONObject temp = new JSONObject();
 
         reportDataCount++;
 
-        
-        temp.put("Date",date);
 
-        if(gLocation == null){
-            try {
-                temp.put("Latitude","/");
-                temp.put("Longitude","/");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            getLastLocation();
-        }else{
-            try {
-                temp.put("Latitude",gLocation.getLatitude());
-                temp.put("Longitude",gLocation.getLongitude());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+        temp.put("Date", date);
+
+        try {
+            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (location.equals(null)) throw new Exception();
+            temp.put("Latitude", String.valueOf(location.getLatitude()));
+            temp.put("Longitude", String.valueOf(location.getLongitude()));
+        } catch (SecurityException e) {
+            e.printStackTrace();
+            temp.put("Latitude", "/");
+            temp.put("Longitude", "/");
+        } catch (Exception e) {
+            e.printStackTrace();
+            temp.put("Latitude", "/");
+            temp.put("Longitude", "/");
         }
+
 
         Integer lastMargin = allMargin.get(allMargin.size() - 1);
         Integer lastRSSI = allRSSI.get(allRSSI.size() - 1);

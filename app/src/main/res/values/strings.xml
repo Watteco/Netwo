@@ -10,7 +10,7 @@
     <string name="pairing_request">PAIRING requested-> Perform pairing steps. Connect again</string>
     <string name="emission"><u>Emission:</u></string>
     <string name="reception"><u>Reception:</u></string>
-    <string name="aboutText">This app has been developed by Olivier STEPHAN for Watteco. All right reserved V1.04</string>
+    <string name="aboutText">This app has been developed by Olivier STEPHAN for Watteco. All right reserved V1.05</string>
     <string name="received">You received </string>
     <string name="percentage">% of the data.</string>
     <string name="descriptionMargin">Margin in dB between the received signal level and the minimum reception level.</string>
