@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -20,13 +21,12 @@ import android.graphics.Paint;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.format.DateFormat;
@@ -51,6 +51,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.DialogFragment;
@@ -65,7 +66,10 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -74,6 +78,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Hashtable;
@@ -82,20 +87,17 @@ import java.util.Locale;
 import java.util.Objects;
 
 
-@RequiresApi(api = Build.VERSION_CODES.N)
-public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener, LocationListener {
+public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
-    private static final int REQUEST_LOCATION = 1;
     //Variable par defaut configurable
     int MarginPerfect = 15, MarginGood = 10, MarginBad = 5, SNRPerfect = -5, SNRBad = -10, RSSIPerfect = -107, RSSIBad = -118;
 
     private final List<String> allTXInfo = new ArrayList<>();
-    private static final String TAG = "TerminalFragment";
     ActivityResultLauncher<String[]> locationPermissionRequest =
             registerForActivityResult(new ActivityResultContracts
-                            .RequestMultiplePermissions(), result -> {
-                        Boolean fineLocationGranted = result.getOrDefault(
-                                Manifest.permission.ACCESS_FINE_LOCATION, false);
+                    .RequestMultiplePermissions(), result -> {
+                Boolean fineLocationGranted = result.getOrDefault(
+                        Manifest.permission.ACCESS_FINE_LOCATION, false);
                         Boolean coarseLocationGranted = result.getOrDefault(
                                 Manifest.permission.ACCESS_COARSE_LOCATION, false);
                         if (fineLocationGranted != null && fineLocationGranted) {
@@ -107,8 +109,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                         }
                     }
             );
-    private FusedLocationProviderClient fusedLocationClient;
-    private LocationManager locationManager;
 
     enum Connected {False, Pending, True}
 
@@ -142,16 +142,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private TextView simplifiedSNR;
     private TextView simplifiedEmission;
     private TextView simplifiedReceptionInfo;
-    private TextView simplifiedSend;
     private TextView simplifiedOperator;
     private ImageView simplifiedEmissionCheck;
     private ImageView simplifiedReceptionCheck;
     private ImageView simplifiedBatteryImage;
-    private ImageView simplifiedGatewayImage;
     private TextView simplifiedBatteryText;
 
-
-    int paramSF, paramADR, paramNumber;
     private List<String> datas = new ArrayList<>();
     private JSONArray reportData = new JSONArray();
     private int reportDataCount;
@@ -159,7 +155,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private List<String> allCurrentNumber = new ArrayList<>();
     private List<String> allNumber = new ArrayList<>();
-    private final Integer defaultSpinnerEUI = 3;
     private List<Integer> allGateway = new ArrayList<>();
     private List<Integer> allAverageGateway = new ArrayList<>();
     private List<Integer> allMargin = new ArrayList<>();
@@ -178,7 +173,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private long firstTimestamp = 0;
     private Integer offset = 0;
-    private String lastTXInfo = "";
     private SerialService service;
     private boolean initialStart = true;
     public Connected connected = Connected.False;
@@ -189,30 +183,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public String DEVEUI_value = "";
     int spMarginPerfect, spMarginGood, spMarginBad, spRSSIPerfect, spRSSIBad, spSNRPerfect, spSNRBad, spSpinnerEUI;
     SerialSocket socket;
-
-    @Override
-    public void onLocationChanged(@NonNull Location location) {
-        receiveText.append("Longitude : " + location.getLongitude() + " latitude : " + location.getLatitude() + "\n");
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-        Toast.makeText(getContext(), "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show();
-    }
-
     SwipeRefreshLayout swipeRefreshLayout;
 
-    @Override
-    public void onProviderEnabled(String provider) {
-        Toast.makeText(getContext(), "Thx", Toast.LENGTH_SHORT).show();
-
-        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-        try {
-            locationManager.requestLocationUpdates(provider, 5000, 5, this);
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        }
-    }
+    boolean requestingLocationUpdates = false;
+    LocationRequest locationRequest;
+    Location lastLocation = null;
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
 
     /*
      * Lifecycle
@@ -227,27 +204,26 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         deviceAddress = getArguments().getString("device");
         deviceName = getArguments().getString("deviceName");
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
+        locationRequest = LocationRequest.create();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        locationPermissionRequest.launch(new String[]{
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.INTERNET
-        });
-
-        LocationRequest.create();
-
-        try {
-            locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, this);
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        }
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                lastLocation = locationResult.getLocations().get(locationResult.getLocations().size() - 1);
+                receiveText.append("Latitude :" + lastLocation.getLatitude() + " longitude :" + lastLocation.getLongitude());
+            }
+        };
     }
 
     public void onDestroyView() {
         disconnect();
         requireActivity().stopService(new Intent(getActivity(), SerialService.class));
         service.detach();
+        stopLocationUpdates();
         super.onDestroyView();
     }
 
@@ -262,8 +238,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onStop() {
-        if (service != null && !requireActivity().isChangingConfigurations())
-            service.detach();
         super.onStop();
     }
 
@@ -287,12 +261,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onResume() {
         super.onResume();
-
-
         if (initialStart && service != null) {
             initialStart = false;
             requireActivity().runOnUiThread(this::connect);
         }
+
+        startLocationUpdates();
+
     }
 
     @Override
@@ -314,6 +289,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
      * UI
      */
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -325,10 +301,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         // Change the size of title size
         View tmpView = toolbar.getChildAt(0);
         if (tmpView instanceof TextView) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                ((TextView) tmpView).setHorizontallyScrolling(false);
-                ((TextView) tmpView).setAutoSizeTextTypeUniformWithConfiguration(13, 15, 1, 1);
-            }
+            ((TextView) tmpView).setHorizontallyScrolling(false);
+            ((TextView) tmpView).setAutoSizeTextTypeUniformWithConfiguration(13, 15, 1, 1);
         }
 
         SharedPreferences sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
@@ -343,6 +317,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         spRSSIPerfect = sharedPref.getInt("RSSIPerfect", RSSIPerfect);
         spRSSIBad = sharedPref.getInt("RSSIBad", RSSIBad);
 
+        int defaultSpinnerEUI = 3;
         spSpinnerEUI = sharedPref.getInt("spinnerEUI", defaultSpinnerEUI) - 1;
 
         receiveText = view.findViewById(R.id.textview);// TextView performance decreases with number of spans
@@ -389,7 +364,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             return true;
         });
 
-        simplifiedGatewayImage = view.findViewById(R.id.simplifiedGatewayImage);
+        ImageView simplifiedGatewayImage = view.findViewById(R.id.simplifiedGatewayImage);
         simplifiedGatewayImage.setOnLongClickListener(v -> {
             showDialog("Gateway");
             return true;
@@ -421,7 +396,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             return false;
         });
 
-        simplifiedSend = view.findViewById(R.id.simplifiedSend);
+        TextView simplifiedSend = view.findViewById(R.id.simplifiedSend);
         simplifiedSend.setOnClickListener(v -> {
             showDialogSend();
         });
@@ -495,13 +470,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         disconnect();
         requireActivity().stopService(new Intent(getActivity(), SerialService.class));
-        locationManager.removeUpdates(this);
         super.onDestroy();
 
     }
 
-    private boolean clearEverything() {
-        receiveText.setText("~" + requireContext().getResources().getString(R.string.clear) + "~\n");
+    private void clearEverything() {
+        receiveText.setText(MessageFormat.format("~{0}~\n", requireContext().getResources().getString(R.string.clear)));
         percentageReceivedDataTX.setText("");
         percentageReceivedDataRX.setText("");
         simplifiedRSSI.setText("RSSI");
@@ -561,7 +535,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         drawGradient(graphRSSI);
         drawGradient(graphMargin);
 
-        return true;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -683,7 +656,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         logsFragment.setDialogResult(result ->
 
                 {
-                    String r = result;
                     sendLogs();
                 }
         );
@@ -714,7 +686,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             writer.flush();
             writer.close();
         } catch (Exception e) {
-            Toast.makeText(getContext(), "File writing failed: " + e.toString(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), "File writing failed: " + e, Toast.LENGTH_LONG).show();
         }
 
         File filePath = new File(getContext().getCacheDir(), "");
@@ -764,7 +736,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private void send(String str) {
         if (connected != Connected.True) {
-            Toast.makeText(getActivity(), requireContext().getResources().getString(R.string.notConnected), Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), getContext().getResources().getString(R.string.notConnected), Toast.LENGTH_LONG).show();
             return;
         }
         try {
@@ -785,13 +757,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void status(String str) {
-        try {
-            SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
-            spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            receiveText.append(spn);
-        } catch (Exception e) {
-        }
-
+        SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
+        spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        receiveText.append(spn);
     }
 
     /*
@@ -811,17 +779,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         }, 5000);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onSerialConnectError(Exception e) {
-        try {
-            status("connection failed: " + e.getMessage());
-            disconnect();
 
-            Handler handler = new Handler();
-            handler.postDelayed(this::connect, 5000);
-        } catch (Exception err) {
-        }
+        status("connection failed: " + e.getMessage());
+        disconnect();
+
+        Handler handler = new Handler();
+        handler.postDelayed(this::connect, 5000);
 
     }
 
@@ -833,7 +798,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         connected = c;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onSerialRead(byte[] data) {
         receive(data);
@@ -848,12 +812,26 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         handler.postDelayed(this::connect, 5000);
     }
 
+    private void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
+        }
+        fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
+        );
+
+
+    }
+
+    private void stopLocationUpdates() {
+        fusedLocationClient.removeLocationUpdates(locationCallback);
+    }
 
     /*
      * SerialListener
      */
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
     public void collectData(String data) {
         datas.add(data);
         try {
@@ -910,7 +888,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
                         if (connected == Connected.True) {
                             // Actions to do after 2 seconds
-                            SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+                            SharedPreferences sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
 
                             String spNumberValue = sharedPref.getString("NumberValue", "5");
                             String tmpSFValue = sharedPref.getString("SFValue", "12,5");
@@ -940,8 +918,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     }
 
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
     public void parseData(String data) throws JSONException {
 
         if (data.startsWith(Objects.requireNonNull(System.getProperty("line.separator")))) {
@@ -976,14 +952,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
             long currentTimeStamp = System.currentTimeMillis() / 1000 - firstTimestamp;
 
-            int x = Math.round(currentTimeStamp / 15);
             Integer currentNumberOfData = allCurrentNumber.size();
 
             // On itère sur toutes les lignes, et on vérifie si la ligne contient ce qu'on a besoin d'afficher
             int cptLine = 0;
             for (String line : lines) {
                 if (line.contains("/")) {
-                    Integer tmpValue = Integer.valueOf(lines[cptLine].split("/")[1]) + offset;
+                    int tmpValue = Integer.parseInt(lines[cptLine].split("/")[1]) + offset;
                     String tmpString = lines[cptLine].split("/")[0] + "/" + tmpValue;
                     allCurrentNumber.add(tmpString);
                     allNumber.add(lines[cptLine]);
@@ -1060,7 +1035,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         } else if (isTxInfo) {
             for (String line : lines) {
                 if (line.contains("TX")) {
-                    lastTXInfo = line;
                     allTXInfo.add(line);
 
                     displaySimplifiedData(false, true);
@@ -1070,7 +1044,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void checkXMaximum(LineChart graph, List<Integer> datas) {
-        Float currentAxisMaximum = graph.getAxisLeft().getAxisMaximum();
+        float currentAxisMaximum = graph.getAxisLeft().getAxisMaximum();
         Integer lastData = datas.get(datas.size() - 1);
 
         if (currentAxisMaximum <= lastData)
@@ -1086,19 +1060,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         temp.put("Date", date);
 
-        try {
-            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (location.equals(null)) throw new Exception();
-            temp.put("Latitude", String.valueOf(location.getLatitude()));
-            temp.put("Longitude", String.valueOf(location.getLongitude()));
-        } catch (SecurityException e) {
-            e.printStackTrace();
-            temp.put("Latitude", "/");
-            temp.put("Longitude", "/");
-        } catch (Exception e) {
-            e.printStackTrace();
-            temp.put("Latitude", "/");
-            temp.put("Longitude", "/");
+
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
+        } else {
+            if (lastLocation != null) {
+                temp.put("Latitude", lastLocation.getLatitude());
+                temp.put("Longitude", lastLocation.getLongitude());
+            } else {
+                temp.put("Latitude", "-");
+                temp.put("Longitude", "-");
+            }
         }
 
 
@@ -1131,7 +1103,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private void putReportDataCSV(FileWriter writer) throws IOException, JSONException {
         writer.append("Date,");
         writer.append("Latitude,");
@@ -1168,7 +1139,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private void sendReport(String name) {
         if(reportType.equals("json")){
             String fileName;
@@ -1191,14 +1161,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 writer.flush();
                 writer.close();
             }catch (Exception e){
-                Toast.makeText(getContext(), "File writing failed: " + e.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "File writing failed: " + e, Toast.LENGTH_LONG).show();
             }
 
-            File filePath = new File(getContext().getCacheDir(), "");
+            File filePath = new File(requireContext().getCacheDir(), "");
             File newFile = new File(filePath, fileName);
-            Uri uri = FileProvider.getUriForFile(getContext(), BuildConfig.APPLICATION_ID + ".provider", newFile);
+            Uri uri = FileProvider.getUriForFile(requireContext(), BuildConfig.APPLICATION_ID + ".provider", newFile);
 
-            Intent intent = ShareCompat.IntentBuilder.from((Activity) getContext())
+            Intent intent = ShareCompat.IntentBuilder.from((Activity) requireContext())
                     .setType("text/json")
                     .setStream(uri)
                     .setChooserTitle("Choose bar")
@@ -1228,14 +1198,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 writer.flush();
                 writer.close();
             }catch (Exception e){
-                Toast.makeText(getContext(), "File writing failed: " + e.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "File writing failed: " + e, Toast.LENGTH_LONG).show();
             }
 
-            File filePath = new File(getContext().getCacheDir(), "");
+            File filePath = new File(requireContext().getCacheDir(), "");
             File newFile = new File(filePath, fileName);
-            Uri uri = FileProvider.getUriForFile(getContext(), BuildConfig.APPLICATION_ID + ".provider", newFile);
+            Uri uri = FileProvider.getUriForFile(requireContext(), BuildConfig.APPLICATION_ID + ".provider", newFile);
 
-            Intent intent = ShareCompat.IntentBuilder.from((Activity) getContext())
+            Intent intent = ShareCompat.IntentBuilder.from((Activity) requireContext())
                     .setType("text/comma-separated-values")
                     .setStream(uri)
                     .setChooserTitle("Choose bar")
@@ -1667,7 +1637,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             sendFragment.show(ft, "Dialog Fragment");
 
             sendFragment.setDialogResult(result -> {
-                SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
 
                 String spNumberValue = sharedPref.getString("NumberValue", "5");
                 String tmpSFValue = sharedPref.getString("SFValue", "12,5");
@@ -1707,7 +1677,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     void showDialogReport() {
 
         assert getFragmentManager() != null;
