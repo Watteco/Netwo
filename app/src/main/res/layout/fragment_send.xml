@@ -125,6 +125,35 @@
     </LinearLayout>
 
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.5"
+            android:gravity="right|center"
+            android:singleLine="true"
+            android:text="Comment" />
+
+        <EditText
+            android:id="@+id/sendComment"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:autoSizeMaxTextSize="12sp"
+            android:autoSizeMinTextSize="6sp"
+            android:autoSizeStepGranularity="0.5sp"
+            android:autoSizeTextType="uniform"
+            android:hint="Optional"
+            android:inputType="text"
+            android:paddingLeft="15dp"
+            android:singleLine="true"
+            android:textColorHint="@color/colorWhite" />
+    </LinearLayout>
+
     <Button
         android:id="@+id/sendParameters"
         android:layout_width="match_parent"

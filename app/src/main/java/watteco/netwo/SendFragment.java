@@ -31,13 +31,14 @@ import java.util.Objects;
  */
 public class SendFragment extends DialogFragment {
     int resetNbFrame = 5, resetADR = 0;
-    String resetSF = "12,5";
+    String resetSF = "12,5", resetComment = "";
 
     private enum Connected {False, Pending, True}
 
     String DEVEUI;
     CheckBox checkBoxADR;
     EditText editNumber;
+    EditText Comment;
     Spinner spinnerSF, spinnerDEVEUI;
     ProgressBar progressBar;
     ImageView checked;
@@ -45,7 +46,7 @@ public class SendFragment extends DialogFragment {
     OnMyDialogUpdate mDialogUpdateAPP;
     OnMyDialogUpdate mDialogUpdateDEV;
 
-    String NumberValue, SFValue, SFValueIndex, ADRValue;
+    String NumberValue, SFValue, SFValueIndex, ADRValue, CommentValue;
     boolean initSpinnerAPP = true;
     boolean initSpinnerDEV = true;
 
@@ -81,6 +82,7 @@ public class SendFragment extends DialogFragment {
         String spSFValue = tmpSFValue.split(",")[0];
         String spSFValueIndex = tmpSFValue.split(",")[1];
         String spADRValue = sharedPref.getString("ADRValue", String.valueOf(resetADR));
+        String spCommentValue = sharedPref.getString("CommentValue", String.valueOf(resetComment));
 
         int spSpinnerEUI = 2;
 
@@ -167,6 +169,8 @@ public class SendFragment extends DialogFragment {
         editNumber = v.findViewById(R.id.sendNumber);
         editNumber.setText(spNumberValue);
 
+        Comment = v.findViewById(R.id.sendComment);
+        Comment.setText(spCommentValue);
 
         checkBoxADR = v.findViewById(R.id.sendADR);
         checkBoxADR.setChecked(spADRValue.equals("1"));
@@ -182,6 +186,7 @@ public class SendFragment extends DialogFragment {
                             if(editNumber.getText().toString().isEmpty()) editNumber.setText("5");
 
                             NumberValue = editNumber.getText().toString();
+                            CommentValue = Comment.getText().toString();
 
                             DEVEUI = (String) spinnerDEVEUI.getSelectedItem();
 
@@ -194,6 +199,7 @@ public class SendFragment extends DialogFragment {
                                 editor.putString("NumberValue", NumberValue);
                                 editor.putString("SFValue", SFValue + "," + SFValueIndex);
                                 editor.putString("ADRValue", ADRValue);
+                                editor.putString("CommentValue", CommentValue);
                                 editor.apply();
 
                                 mDialogResult.finish("");
@@ -218,6 +224,8 @@ public class SendFragment extends DialogFragment {
                     if( mDialogResult != null ){
 
                         editNumber.setText(Integer.toString(resetNbFrame));
+
+                        Comment.setText(resetComment);
 
                         spinnerSF.setSelection(Integer.parseInt(resetSF.split(",")[1]), true);
 

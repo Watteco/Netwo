@@ -155,6 +155,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private List<String> allCurrentNumber = new ArrayList<>();
     private List<String> allNumber = new ArrayList<>();
+    private List<String> allComment = new ArrayList<>();
     private List<Integer> allGateway = new ArrayList<>();
     private List<Integer> allAverageGateway = new ArrayList<>();
     private List<Integer> allMargin = new ArrayList<>();
@@ -834,6 +835,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
      */
     public void collectData(String data) {
         datas.add(data);
+        SharedPreferences shPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
+        String CommentVal = shPref.getString("CommentValue", "N/A");
         try {
             if (data.contains("NOK")) {
                 switch (lastSend) {
@@ -854,8 +857,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                                     String tmpSFValue = sharedPref.getString("SFValue", "12,5");
                                     String spSFValue = tmpSFValue.split(",")[0];
                                     String spADRValue = sharedPref.getString("ADRValue", "0");
+                                    String spCommentValue = sharedPref.getString("CommentValue", "N/A");
 
-                                    send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
+                                    send("S" + spNumberValue + "," + spSFValue + "," + spADRValue + "," + spCommentValue);
                                     lastSend = "S";
                                 }
                             }, 2000);
@@ -894,8 +898,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                             String tmpSFValue = sharedPref.getString("SFValue", "12,5");
                             String spSFValue = tmpSFValue.split(",")[0];
                             String spADRValue = sharedPref.getString("ADRValue", "0");
+                            String spCommentValue = sharedPref.getString("CommentValue", "N/A");
 
-                            send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
+                            send("S" + spNumberValue + "," + spSFValue + "," + spADRValue + "," + spCommentValue);
                             lastSend = "S";
                         } else {
                             isWaitingX = false;
@@ -909,7 +914,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     }
                 }
             } else {
-                parseData(data);
+                parseData(data, CommentVal);
             }
 
         } catch (Exception e) {
@@ -918,7 +923,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     }
 
-    public void parseData(String data) throws JSONException {
+    public void parseData(String data, String CommentVal) throws JSONException {
 
         if (data.startsWith(Objects.requireNonNull(System.getProperty("line.separator")))) {
             data = data.substring(1);
@@ -983,6 +988,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     allBatteryVoltage.add((float) ((Integer.parseInt(lines[cptLine].split(":")[1].trim()) / 100)) / 10);
                 if (line.contains("NetId"))
                     allOperator.add(Integer.valueOf(lines[cptLine].split(":")[1].trim()));
+                    allComment.add(CommentVal);
                 cptLine++;
             }
 
@@ -1083,6 +1089,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         Integer lastOperator = allOperator.get(allOperator.size() - 1);
         Integer lastWindows = allWindows.get(allWindows.size() - 1);
         Integer lastDelay = allDelay.get(allDelay.size() - 1);
+        String lastComment = allComment.get(allComment.size() - 1); // GENERATES BUG
 
         String lastOperatorName = allOperatorName.containsKey(lastOperator) ? Objects.requireNonNull(allOperatorName.get(lastOperator)).toString().toUpperCase() : "Unknown";
 
@@ -1096,6 +1103,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         temp.put("Delay", lastDelay);
         temp.put("OperatorIndex", lastOperator);
         temp.put("OperatorName",lastOperatorName);
+        temp.put("Comment",lastComment);
 
 
         reportData.put(temp);
@@ -1116,7 +1124,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         writer.append("SFRX,");
         writer.append("Delay,");
         writer.append("OperatorIndex,");
-        writer.append("OperatorName");
+        writer.append("OperatorName,");
+        writer.append("Comment");
         writer.append("\n");
         for(int i = 1; i <= reportDataCount; i++){
 
@@ -1133,7 +1142,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             writer.append(String.valueOf(currentResult.get("SFRX"))).append(",");
             writer.append(String.valueOf(currentResult.get("Delay"))).append(",");
             writer.append(String.valueOf(currentResult.get("OperatorIndex"))).append(",");
-            writer.append(String.valueOf(currentResult.get("OperatorName")));
+            writer.append(String.valueOf(currentResult.get("OperatorName"))).append(",");
+            writer.append(String.valueOf(currentResult.get("Comment")));
             writer.append("\n");
         }
 
@@ -1289,6 +1299,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             Integer lastGateway = allGateway.get(allGateway.size()-1);
             Integer lastOperator = allOperator.get(allOperator.size()-1);
             String lastOperatorName;
+            //String lastComment = allComment.get(allComment.size() - 1);
             try {
                 lastOperatorName = ((String) Objects.requireNonNull(allOperatorName.get(lastOperator))).toUpperCase();
             }
@@ -1643,10 +1654,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 String tmpSFValue = sharedPref.getString("SFValue", "12,5");
                 String spSFValue = tmpSFValue.split(",")[0];
                 String spADRValue = sharedPref.getString("ADRValue", "0");
+                String spCommentValue = sharedPref.getString("CommentValue", "N/A");
 
                 resetSimplifiedDisplay();
 
-                send("S" + spNumberValue + "," + spSFValue + "," + spADRValue);
+                send("S" + spNumberValue + "," + spSFValue + "," + spADRValue + "," + spCommentValue);
                 lastSend = "S";
             });
 
