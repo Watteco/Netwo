@@ -9,13 +9,12 @@ BLE Serial Interface
 --------------------
 
 After each linkCheckReq the Netwo send on the serial BLE:
-"
+
   \n
   TX <SentFrame>/<FrameToSend>\n
-"
+
   
 After reception of linkCheckAns the Netwo send on the serial BLE:
-"
   <nbReceivedFrame>/<nbSentFrame>\n
   Gateway : %d \n
   TX Margin : %d\n
@@ -27,11 +26,11 @@ After reception of linkCheckAns the Netwo send on the serial BLE:
   RX Delay:%d \n
   Battery:%d\nNetId: %d [option if battery is always measured]  
   \n\n
-"
+
     
     
 After sent all frame the netwo send on the serial BLE:
-"
+
     \n
     \n********RESULT**********\n
     <ReceivedFrame>/<SentFrame-1>\nPER: <ReceivedFrame*100/(SentFrame-1)>\n
@@ -40,7 +39,7 @@ After sent all frame the netwo send on the serial BLE:
     Average SNR:%d \n
     Average RSSI:%d \n
     ********RESULT**********\n\n\n
-"
+
    
     
 Command to interact with the Netwo:
