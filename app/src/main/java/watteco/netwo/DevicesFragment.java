@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -190,14 +191,42 @@ public class DevicesFragment extends ListFragment {
         ((TextView) getListView().getEmptyView()).setTextSize(18);
         setListAdapter(listAdapter);
 
-        int permission = ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_SCAN);
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                    getActivity(),
-                    PERMISSIONS_LOCATION,
-                    1
-            );
+        // Check if the location permission has been granted
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Location permission has already been granted, do something
+        } else {
+            // Location permission has not been granted, show pop-up dialog to request permission
+            showLocationPermissionDialog();
         }
+    }
+
+    private void showLocationPermissionDialog() {
+        // Create a new AlertDialog builder
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
+
+        // Set the dialog's view to your location_permission_dialog layout
+        builder.setView(getLayoutInflater().inflate(R.layout.location_permission_dialog, null));
+
+        // Set a positive button click listener for the dialog
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+                // User clicked the OK button, request location permission
+                //ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+                int permission = ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_SCAN);
+                if (permission != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(
+                            getActivity(),
+                            PERMISSIONS_LOCATION,
+                            1
+                    );
+                }
+            }
+        });
+
+        // Create and show the dialog
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     @SuppressLint("MissingPermission")

@@ -8,7 +8,7 @@
     <string name="descriptionMargin">Marge en dB entre le niveau de signal recu et le niveau de reception minimum.</string>
     <string name="descriptionRSSI">"La RSSI est la puissance du signal reçu en dBm. "</string>
     <string name="descriptionSNR">" Le SNR est le rapport entre le signal de puissance reçu et le niveau de puissance du bruit."</string>
-    <string name="aboutText">" Cette application a été développée par Olivier STEPHAN pour Watteco. Tous droits réservés V1.07"</string>
+    <string name="aboutText">" Cette application a été développée par Olivier STEPHAN pour Watteco. Tous droits réservés V1.08"</string>
     <string name="descriptionGateway">" Il s'agit du nombre de passerelle avec laquelle le produit communique."</string>
     <string name="error">" Il y a une erreur. Veuillez nous contacter pour la résoudre."</string>
     <string name="descriptionSF">" Spreading Factor (SF): Débit d'émision varie de SF7 à SF12."</string>
@@ -67,4 +67,6 @@
     <string name="connecting"> BLE: Connexion </string>
     <string name="notConnected">BLE: Déconnecté</string>
     <string name="failedConnection">BLE: La connexion a échoué</string>
+    <string name="location_background">Cette application utilise les informations de localisation pour localiser où les tests RF sont effectués. La recherche d\'appareils Bluetooth LE nécessite également l\'accès à votre position en arrière-plan.</string>
+    <string name="ok">OK</string>
 </resources>

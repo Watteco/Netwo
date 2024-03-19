@@ -2,15 +2,15 @@
     <string name="app_name">Netw\'O</string>
     <string name="devices">Bluetooth LE Devices</string>
     <string name="location_permission_title">Location permission required (FINE)</string>
-    <string name="location_permission_message">This app does not use location information, but scanning for Bluetooth LE devices requires this permission</string>
+    <string name="location_permission_message">This app uses location information to locate RF tests, scanning for Bluetooth LE devices also requires this permission</string>
     <string name="location_permission_title_two">Location permission required (COARSE)</string>
-    <string name="location_permission_message_two">Since Android 10 this app require CORSE location to scan BLE device.</string>
+    <string name="location_permission_message_two">Since Android 10 this app require COARSE location to scan BLE device.</string>
     <string name="location_denied_title">Location permission denied</string>
     <string name="location_denied_message">As location permission has not been granted, this app cannot scan for Bluetooth LE devices.</string>
     <string name="pairing_request">PAIRING requested-> Perform pairing steps. Connect again</string>
     <string name="emission"><u>Emission:</u></string>
     <string name="reception"><u>Reception:</u></string>
-    <string name="aboutText">This app has been developed by Olivier STEPHAN for Watteco. All right reserved V1.07</string>
+    <string name="aboutText">This app has been developed by Olivier STEPHAN for Watteco. All right reserved V1.08</string>
     <string name="received">You received </string>
     <string name="percentage">% of the data.</string>
     <string name="descriptionMargin">Margin in dB between the received signal level and the minimum reception level.</string>
@@ -66,5 +66,7 @@
     <string name="connecting"> BLE: Connecting </string>
     <string name="notConnected"> BLE: Not connected </string>
     <string name="failedConnection"> BLE: Connection failed </string>
+    <string name="location_background">This app uses location information to locate where RF tests are being carried out. Scanning for Bluetooth LE devices also requires access to your location while in the background.</string>
+    <string name="ok">OK</string>
 </resources>
 
