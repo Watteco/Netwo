@@ -1,15 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
     defaultConfig {
-        targetSdkVersion 32
+        targetSdkVersion 33
         minSdkVersion 24
         vectorDrawables.useSupportLibrary true
 
-        applicationId "watteco.netwo"
-        versionCode 24
-        versionName "1.08"
+        applicationId "wattecoDev.netwo"
+        versionCode 26
+        versionName "1.09"
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

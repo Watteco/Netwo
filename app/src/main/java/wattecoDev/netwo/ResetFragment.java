@@ -1,4 +1,4 @@
-package watteco.netwo;
+package wattecoDev.netwo;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

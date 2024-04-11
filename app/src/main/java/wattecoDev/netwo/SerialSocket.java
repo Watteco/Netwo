@@ -1,4 +1,4 @@
-package watteco.netwo;
+package wattecoDev.netwo;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="watteco.netwo">
+    package="wattecoDev.netwo">
 
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
@@ -25,7 +25,7 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
 
         <activity
-            android:name="watteco.netwo.MainActivity"
+            android:name="wattecoDev.netwo.MainActivity"
             android:screenOrientation="portrait"
             android:exported="true"
             android:windowSoftInputMode="stateHidden|adjustPan">
@@ -36,7 +36,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name="watteco.netwo.SerialService" />
+        <service android:name="wattecoDev.netwo.SerialService" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

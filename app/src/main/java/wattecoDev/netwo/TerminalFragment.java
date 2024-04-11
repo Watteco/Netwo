@@ -1,4 +1,4 @@
-package watteco.netwo;
+package wattecoDev.netwo;
 
 import static android.graphics.Color.GREEN;
 import static android.graphics.Color.RED;
@@ -705,7 +705,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void redirectOnSupport() {
-        Uri webpage = Uri.parse("https://support.nke-watteco.com/netwo/");
+        Uri webpage = Uri.parse("https://support.watteco.com/netwo/");
         Intent intent = new Intent(Intent.ACTION_VIEW, webpage);
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
             startActivity(intent);
